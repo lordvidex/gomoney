@@ -1,0 +1,10 @@
+FROM golang:alpine AS builder
+WORKDIR /go/src/github.com/lordvidex/gomoney-api
+COPY ./api ./api
+COPY ./pkg ./pkg
+COPY go.mod go.sum ./
+RUN go build -o /go/bin/gomoney-api api/cmd/main.go
+
+FROM alpine:latest AS production
+COPY --from=builder /go/bin/gomoney-api /go/bin/gomoney-api
+ENTRYPOINT ["/go/bin/gomoney-api"]

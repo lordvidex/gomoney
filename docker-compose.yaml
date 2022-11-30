@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: "gomoney-db" 
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: user
+      POSTGRES_DB: gomoney
+    ports:
+      - 5432:5432
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "gomoney"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
+  server: 
+    container_name: "gomoney-grpc-server"
+    build:
+      dockerfile: deployments/Dockerfile.server
+    depends_on:
+      db:
+        condition: service_healthy
+        
+  
+  api:
+    container_name: "gomoney-api-server"
+    build: 
+      dockerfile: deployments/Dockerfile.api
+    depends_on:
+      - server
+    ports:
+      - "8000:8080"
+
+  telegram:
+    container_name: "gomoney-telegram-server"
+    build:
+      dockerfile: deployments/Dockerfile.telegram
+    depends_on:
+      - server
+    ports:
+      - "8001:8080"
+
+volumes:
+  db:
