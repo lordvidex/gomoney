@@ -1,7 +1,7 @@
 # GoMoney 
 [![GoDoc](https://godoc.org/github.com/lordvidex/gomoney?status.svg)](https://godoc.org/github.com/lordvidex/gomoney)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lordvidex/gomoney)](https://goreportcard.com/report/github.com/lordvidex/gomoney)
-[![Coverage Status](https://coveralls.io/repos/github/GoMoney/gomoney/badge.svg?branch=master)](https://coveralls.io/github/lordvidex/gomoney?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/GoMoney/gomoney/badge.svg?branch=master)](https://coveralls.io/github/lordvidex/gomoney?branch=main)
 
 ## About GoMoney
 GoMoney is a project that aims to provide an intuitive
