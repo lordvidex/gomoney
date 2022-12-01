@@ -21,11 +21,15 @@ services:
 
   server: 
     container_name: "gomoney-grpc-server"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/gomoney
     build:
       dockerfile: deployments/Dockerfile.server
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - 8002:8080
         
   
   api:

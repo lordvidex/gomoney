@@ -10,5 +10,5 @@ type Account struct {
 }
 
 func (a *Account) CanTransfer() bool {
-	return a.Balance > 0 || a.IsBlocked
+	return a.Balance > 0 && !a.IsBlocked
 }
