@@ -1,7 +1,7 @@
 # GoMoney 
 [![GoDoc](https://godoc.org/github.com/lordvidex/gomoney?status.svg)](https://godoc.org/github.com/lordvidex/gomoney)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lordvidex/gomoney)](https://goreportcard.com/report/github.com/lordvidex/gomoney)
-[![Coverage Status](https://coveralls.io/repos/github/GoMoney/gomoney/badge.svg?branch=master)](https://coveralls.io/github/lordvidex/gomoney?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/lordvidex/gomoney/badge.svg?branch=main)](https://coveralls.io/github/lordvidex/gomoney?branch=main)
 
 ## About GoMoney
 GoMoney is a project that aims to provide an intuitive
@@ -19,7 +19,7 @@ The GoMoney library contains the following subpackages:
 
 ### Telegram server [/telegram](/telegram/)
 
-The telegram server is a simple telegram bot that allows users to interact with the GoMoney API. It is written in Go and uses the [telego library](github.com/SakoDroid/telego).
+The telegram server is a simple telegram bot that allows users to interact with the GoMoney API. It is written in Go and uses the [telego library](https://github.com/SakoDroid/telego).
 
 ### REST API server [/api](/api)
 
