@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package grpc;
+// import "google/protobuf/empty.proto";
+
+option go_package = "github.com/lordvidex/gomoney/api/internal/grpc";
+
+
+// messages
+message Phone {
+    string number = 1;
+}
+
+message User {
+    string id = 1;
+    string name = 2;
+    string phone = 3;
+    
+    message ID {
+        string id = 1;
+    }
+}
+
+message Account {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    double balance = 4;
+    Currency currency = 5;
+    bool is_blocked = 6;
+}
+
+enum Currency {
+    USD = 0;
+    RUB = 1;
+    NGN = 2;
+}
+
+// services
+
+service UserService {
+    rpc GetUserByPhone(Phone) returns (User) {}
+    rpc CreateUser(User) returns (User.ID) {}
+}
+
+service AccountService {
+    rpc GetAccounts(User.ID) returns (User) {}
+    rpc CreateAccount(User) returns (User.ID) {}
+}
