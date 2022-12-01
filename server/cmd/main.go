@@ -24,10 +24,11 @@ func main() {
 	defer conn.Close(context.TODO())
 
 	// driven adapters
-	repo := postgres.NewRepository(conn)
+	uRepo := postgres.NewUser(conn)
+	aRepo := postgres.NewAccount(conn)
 
 	// application
-	app := application.New(repo)
+	app := application.New(uRepo, aRepo)
 
 	// grpc driver
 	server := grpc.NewServer()

@@ -2,11 +2,16 @@
 package application
 
 import (
+	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-type Repository interface {
-	CreateUser(CreateUserArg) error
+type UserRepository interface {
+	CreateUser(CreateUserArg) (uuid.UUID, error)
 	GetUserByPhone(phone string) (gomoney.User, error)
-	CreateAccount(arg CreateAccountArg) error
+}
+
+type AccountRepository interface {
+	CreateAccount(arg CreateAccountArg) (int64, error)
+	// TODO: Add more repo methods based on the application needs
 }

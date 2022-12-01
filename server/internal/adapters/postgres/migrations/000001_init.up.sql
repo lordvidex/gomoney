@@ -1,9 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE Currency AS ENUM ('USD', 'EUR', 'RUB');
+CREATE TYPE currency AS ENUM ('USD', 'EUR', 'RUB');
 
 CREATE TABLE IF NOT EXISTS "users" (
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(255) NOT NULL
 );

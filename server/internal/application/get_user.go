@@ -11,13 +11,13 @@ type GetUserQuery interface {
 }
 
 type getUserQueryImpl struct {
-	repository Repository
+	repository UserRepository
 }
 
 func (q *getUserQueryImpl) Handle(arg GetUserQueryArg) (gomoney.User, error) {
 	return q.repository.GetUserByPhone(arg.Phone)
 }
 
-func NewGetUserQuery(repository Repository) GetUserQuery {
+func NewGetUserQuery(repository UserRepository) GetUserQuery {
 	return &getUserQueryImpl{repository: repository}
 }

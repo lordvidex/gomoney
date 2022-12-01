@@ -7,10 +7,12 @@ package sqlgen
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO "users" (name, phone) VALUES ($1, $2) RETURNING id, name, phone
+INSERT INTO "users" (name, phone) VALUES ($1, $2) RETURNING id
 `
 
 type CreateUserParams struct {
@@ -18,11 +20,11 @@ type CreateUserParams struct {
 	Phone string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (*User, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Phone)
-	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Phone)
-	return &i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const getUserByPhone = `-- name: GetUserByPhone :one

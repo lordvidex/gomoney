@@ -1,13 +1,13 @@
 // application.go acts as a binder to the application layer exposing all the services
 package application
 
-func New(r Repository) *UseCases {
+func New(ur UserRepository, ar AccountRepository) *UseCases {
 	return &UseCases{
 		Query: Query{
-			GetUser: NewGetUserQuery(r),
+			GetUser: NewGetUserQuery(ur),
 		},
 		Command: Command{
-			CreateUser: NewCreateUserCommand(r),
+			CreateUser: NewCreateUserCommand(ur),
 		},
 	}
 }

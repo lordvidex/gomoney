@@ -13,17 +13,17 @@ type CreateAccountArg struct {
 }
 
 type CreateAccountCommand interface {
-	Handle(CreateAccountArg) error
+	Handle(CreateAccountArg) (int64, error)
 }
 
 type createAccountCommandImpl struct {
-	repository Repository
+	repository AccountRepository
 }
 
-func (c *createAccountCommandImpl) Handle(arg CreateAccountArg) error {
+func (c *createAccountCommandImpl) Handle(arg CreateAccountArg) (int64, error) {
 	return c.repository.CreateAccount(arg)
 }
 
-func NewCreateAccountCommand(repository Repository) CreateAccountCommand {
+func NewCreateAccountCommand(repository AccountRepository) CreateAccountCommand {
 	return &createAccountCommandImpl{repository: repository}
 }

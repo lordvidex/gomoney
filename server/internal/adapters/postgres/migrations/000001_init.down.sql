@@ -1,3 +1,3 @@
 DROP TABLE IF EXISTS "accounts";
 DROP TABLE IF EXISTS "users";
-DROP TYPE IF EXISTS "Currency";
+DROP TYPE IF EXISTS currency;

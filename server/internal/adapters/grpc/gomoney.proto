@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package grpc;
-import "google/protobuf/empty.proto";
+// import "google/protobuf/empty.proto";
 
 option go_package = "github.com/lordvidex/gomoney/server/internal/grpc";
 
@@ -40,10 +40,10 @@ enum Currency {
 
 service UserService {
     rpc GetUserByPhone(Phone) returns (User) {}
-    rpc CreateUser(User) returns (google.protobuf.Empty) {}
+    rpc CreateUser(User) returns (User.ID) {}
 }
 
 service AccountService {
     rpc GetAccounts(User.ID) returns (User) {}
-    rpc CreateAccount(User) returns (google.protobuf.Empty) {}
+    rpc CreateAccount(User) returns (User.ID) {}
 }

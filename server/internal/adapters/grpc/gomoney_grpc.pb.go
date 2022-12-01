@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -24,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	GetUserByPhone(ctx context.Context, in *Phone, opts ...grpc.CallOption) (*User, error)
-	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User_ID, error)
 }
 
 type userServiceClient struct {
@@ -44,8 +43,8 @@ func (c *userServiceClient) GetUserByPhone(ctx context.Context, in *Phone, opts 
 	return out, nil
 }
 
-func (c *userServiceClient) CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *userServiceClient) CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User_ID, error) {
+	out := new(User_ID)
 	err := c.cc.Invoke(ctx, "/grpc.UserService/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -58,7 +57,7 @@ func (c *userServiceClient) CreateUser(ctx context.Context, in *User, opts ...gr
 // for forward compatibility
 type UserServiceServer interface {
 	GetUserByPhone(context.Context, *Phone) (*User, error)
-	CreateUser(context.Context, *User) (*emptypb.Empty, error)
+	CreateUser(context.Context, *User) (*User_ID, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -69,7 +68,7 @@ type UnimplementedUserServiceServer struct {
 func (UnimplementedUserServiceServer) GetUserByPhone(context.Context, *Phone) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByPhone not implemented")
 }
-func (UnimplementedUserServiceServer) CreateUser(context.Context, *User) (*emptypb.Empty, error) {
+func (UnimplementedUserServiceServer) CreateUser(context.Context, *User) (*User_ID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
@@ -146,7 +145,7 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountServiceClient interface {
 	GetAccounts(ctx context.Context, in *User_ID, opts ...grpc.CallOption) (*User, error)
-	CreateAccount(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateAccount(ctx context.Context, in *User, opts ...grpc.CallOption) (*User_ID, error)
 }
 
 type accountServiceClient struct {
@@ -166,8 +165,8 @@ func (c *accountServiceClient) GetAccounts(ctx context.Context, in *User_ID, opt
 	return out, nil
 }
 
-func (c *accountServiceClient) CreateAccount(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *accountServiceClient) CreateAccount(ctx context.Context, in *User, opts ...grpc.CallOption) (*User_ID, error) {
+	out := new(User_ID)
 	err := c.cc.Invoke(ctx, "/grpc.AccountService/CreateAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -180,7 +179,7 @@ func (c *accountServiceClient) CreateAccount(ctx context.Context, in *User, opts
 // for forward compatibility
 type AccountServiceServer interface {
 	GetAccounts(context.Context, *User_ID) (*User, error)
-	CreateAccount(context.Context, *User) (*emptypb.Empty, error)
+	CreateAccount(context.Context, *User) (*User_ID, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -191,7 +190,7 @@ type UnimplementedAccountServiceServer struct {
 func (UnimplementedAccountServiceServer) GetAccounts(context.Context, *User_ID) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAccounts not implemented")
 }
-func (UnimplementedAccountServiceServer) CreateAccount(context.Context, *User) (*emptypb.Empty, error) {
+func (UnimplementedAccountServiceServer) CreateAccount(context.Context, *User) (*User_ID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}

@@ -13,7 +13,7 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO "accounts" (title, description, currency, user_id) VALUES ($1, $2, $3, $4) RETURNING id, title, description, balance, currency, is_blocked, user_id
+INSERT INTO "accounts" (title, description, currency, user_id) VALUES ($1, $2, $3, $4) RETURNING id
 `
 
 type CreateAccountParams struct {
@@ -23,24 +23,16 @@ type CreateAccountParams struct {
 	UserID      uuid.NullUUID
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (*Account, error) {
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (int64, error) {
 	row := q.db.QueryRow(ctx, createAccount,
 		arg.Title,
 		arg.Description,
 		arg.Currency,
 		arg.UserID,
 	)
-	var i Account
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.Description,
-		&i.Balance,
-		&i.Currency,
-		&i.IsBlocked,
-		&i.UserID,
-	)
-	return &i, err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const getUserAccounts = `-- name: GetUserAccounts :many

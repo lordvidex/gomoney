@@ -1,22 +1,24 @@
 package application
 
+import "github.com/google/uuid"
+
 type CreateUserArg struct {
 	Name  string
 	Phone string
 }
 
 type CreateUserCommand interface {
-	Handle(CreateUserArg) error
+	Handle(CreateUserArg) (uuid.UUID, error)
 }
 
 type createUserCommandImpl struct {
-	repository Repository
+	repository UserRepository
 }
 
-func (c *createUserCommandImpl) Handle(arg CreateUserArg) error {
+func (c *createUserCommandImpl) Handle(arg CreateUserArg) (uuid.UUID, error) {
 	return c.repository.CreateUser(arg)
 }
 
-func NewCreateUserCommand(repository Repository) CreateUserCommand {
+func NewCreateUserCommand(repository UserRepository) CreateUserCommand {
 	return &createUserCommandImpl{repository: repository}
 }
