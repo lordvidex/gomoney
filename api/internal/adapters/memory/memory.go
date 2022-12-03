@@ -25,5 +25,7 @@ func (r *repo) GetUserFromPhone(ctx context.Context, s string) (*core.ApiUser, e
 }
 
 func New() application.Repository {
-	return &repo{}
+	return &repo{
+		m: make(map[string]*core.ApiUser),
+	}
 }

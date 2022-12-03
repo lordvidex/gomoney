@@ -12,6 +12,7 @@ import (
 	"github.com/lordvidex/gomoney/pkg/config"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 )
 
@@ -56,7 +57,7 @@ func connectGRPC(c *config.Config) (*grpc.ClientConn, error) {
 	if server == "" {
 		return nil, errors.New("key 'GRPC_SERVER' not set")
 	}
-	return grpc.Dial(server)
+	return grpc.Dial(server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 func initDB(c *config.Config) (*pgx.Conn, error) {
 	conn, err := pgx.Connect(context.TODO(), c.Get("DATABASE_URL"))

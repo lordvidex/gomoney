@@ -21,8 +21,7 @@ func (h *router) wrap(uc UseCaseHandler) func(*fiber.Ctx) error {
 
 func (h *router) setupRoutes() {
 	api := h.f.Group("/api")
-
-	auth := api.Group("/", h.wrap(handlers.AuthMiddleware))
+	auth := h.wrap(handlers.AuthMiddleware)
 
 	// Unauthenticated routes
 	api.Post("/login", h.wrap(handlers.Login))
@@ -30,10 +29,9 @@ func (h *router) setupRoutes() {
 	// Authenticated EndPoints
 
 	// -	Accounts EndPoint
-	auth.Get("/account", h.wrap(handlers.GetAccounts))
-	auth.Post("/account", h.wrap(handlers.CreateAccount))
+	api.Get("/account", auth, h.wrap(handlers.GetAccounts))
+	api.Post("/account", auth, h.wrap(handlers.CreateAccount))
 	//auth.Get("/account:id", h)
-
 	// -	Transactions EndPoint
 	//apiAuth.Post("/api/transactions", h.createTransaction)
 	//apiAuth.Get("/api/transactions/:id", h.getTransactions)
@@ -45,5 +43,7 @@ func (h *router) Listen() error {
 
 func New(app *application.Usecases) *router {
 	f := fiber.New()
-	return &router{app, f}
+	r := &router{app, f}
+	r.setupRoutes()
+	return r
 }
