@@ -1,44 +1,48 @@
 package application
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/lordvidex/gomoney/api/internal/token"
+	"context"
+	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-type createAccountReq struct {
-	Title       string
-	Description string
-	Currency    gomoney.Currency
+type CreateAccountParam struct {
+	UserID  uuid.UUID
+	Account gomoney.Account
 }
 
-func (server *Server) createAccount(ctx *fiber.Ctx) error {
-	var req createAccountReq
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-		return err
-	}
-
-	payload := ctx.Locals(payloadHeader).(token.Payload)
-
-	_, _ = req, payload
-	// TODO: Request to gomoney service grpc to create account
-	// If account is created, return account's details
-	// If error occurs, return an error
-
-	return nil
+type CreateAccountCommand interface {
+	Handle(context.Context, CreateAccountParam) (int64, error)
 }
 
-func (server *Server) getAccounts(ctx *fiber.Ctx) error {
+type createAccountImpl struct {
+	srv Service
+}
 
-	payload := ctx.Locals(payloadHeader).(token.Payload)
+func NewCreateAccountCommand(srv Service) CreateAccountCommand {
+	return &createAccountImpl{srv}
+}
 
-	_ = payload
-	// TODO: Request to gomoney service grpc to get all accounts
-	// If account is created, return account's details
-	// If error occurs, return an error
+func (c *createAccountImpl) Handle(ctx context.Context, param CreateAccountParam) (int64, error) {
+	return c.srv.CreateAccount(ctx, param.UserID.String(), &param.Account)
+}
 
-	return nil
+type ViewAccountsParam struct {
+	UserID uuid.UUID
+}
+
+type ViewAccountsQuery interface {
+	Handle(ctx context.Context, param ViewAccountsParam) ([]gomoney.Account, error)
+}
+
+type viewAccountsImpl struct {
+	srv Service
+}
+
+func NewViewAccountsQuery(srv Service) ViewAccountsQuery {
+	return &viewAccountsImpl{srv}
+}
+
+func (v *viewAccountsImpl) Handle(ctx context.Context, param ViewAccountsParam) ([]gomoney.Account, error) {
+	return v.srv.GetAccounts(ctx, param.UserID.String())
 }

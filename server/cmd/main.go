@@ -2,26 +2,34 @@ package main
 
 import (
 	"context"
-	"log"
-	"net"
-	"os"
-
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v4"
+	"github.com/lordvidex/gomoney/pkg/config"
 	mygrpc "github.com/lordvidex/gomoney/server/internal/adapters/grpc"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres"
 	"github.com/lordvidex/gomoney/server/internal/application"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"log"
+	"net"
 )
 
 func main() {
+	// read config
+	c := config.New()
+
 	// initialise the database connection
-	conn, err := initDB()
+	conn, err := initDB(c)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close(context.TODO())
+
+	// run migrations
+	_ = runMigrations(c)
 
 	// driven adapters
 	uRepo := postgres.NewUser(conn)
@@ -50,8 +58,8 @@ func main() {
 
 }
 
-func initDB() (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.TODO(), os.Getenv("DATABASE_URL"))
+func initDB(c *config.Config) (*pgx.Conn, error) {
+	conn, err := pgx.Connect(context.TODO(), c.Get("DATABASE_URL"))
 	if err != nil {
 		return nil, err
 	}
@@ -60,5 +68,12 @@ func initDB() (*pgx.Conn, error) {
 		return nil, errors.Wrap(err, "failed to ping database")
 	}
 	return conn, nil
+}
 
+func runMigrations(c *config.Config) error {
+	m, err := migrate.New("file:///migrations", c.Get("DATABASE_URL"))
+	if err != nil {
+		return errors.Wrap(err, "failed to run migrations")
+	}
+	return m.Up()
 }

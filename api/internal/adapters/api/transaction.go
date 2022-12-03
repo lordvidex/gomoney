@@ -1,8 +1,9 @@
-package application
+package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/lordvidex/gomoney/api/internal/token"
+	"github.com/lordvidex/gomoney/api/internal/application"
+	"github.com/lordvidex/gomoney/api/internal/core"
 )
 
 type createTransactionReq struct {
@@ -12,7 +13,7 @@ type createTransactionReq struct {
 	Note          string
 }
 
-func (server *Server) createTransaction(ctx *fiber.Ctx) error {
+func (server *api.Server) createTransaction(ctx *fiber.Ctx) error {
 	var req createTransactionReq
 	if err := ctx.BodyParser(&req); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -25,10 +26,10 @@ func (server *Server) createTransaction(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "from and to account cannot be the same",
 		})
-		return ErrSimilarAccountTransaction(req.FromAccountID, req.ToAccountID)
+		return application.ErrSimilarAccountTransaction(req.FromAccountID, req.ToAccountID)
 	}
 
-	payload := ctx.Locals(payloadHeader).(token.Payload)
+	payload := ctx.Locals(payloadHeader).(core.Payload)
 
 	// TODO: Request to gomoney service grpc to verify that both accounts have the same currency
 	// If accounts have the same currency, proceed to create transaction
@@ -50,7 +51,7 @@ type getTransactionsReq struct {
 	AccountID int64
 }
 
-func (server *Server) getTransactions(ctx *fiber.Ctx) error {
+func (server *api.Server) getTransactions(ctx *fiber.Ctx) error {
 	var req getTransactionsReq
 	if err := ctx.ParamsParser(&req); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -59,7 +60,7 @@ func (server *Server) getTransactions(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	payload := ctx.Locals(payloadHeader).(token.Payload)
+	payload := ctx.Locals(payloadHeader).(core.Payload)
 
 	// TODO: Request to gomoney service grpc to verify that the user is the account owner
 	// If user is not the account owner, return an error

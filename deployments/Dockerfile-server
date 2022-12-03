@@ -1,0 +1,22 @@
+FROM golang:1.18 AS development
+WORKDIR /go/src/github.com/lordvidex/gomoney
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go install github.com/cespare/reflex@latest
+EXPOSE 8080
+CMD reflex -sr '\.go$' go run ./server/cmd/main.go
+
+FROM golang:alpine AS builder
+WORKDIR /go/src/github.com/lordvidex/gomoney
+COPY ./server ./server
+COPY ./pkg ./pkg
+COPY go.mod go.sum ./
+COPY ./server/internal/adapters/postgres/migrations /migrations
+RUN go build -o /go/bin/gomoney-server ./server/cmd
+
+FROM alpine:latest AS production
+COPY --from=builder /go/bin/gomoney-server /go/bin/gomoney-server
+COPY --from=builder /migrations /migrations
+EXPOSE 8080
+ENTRYPOINT ["/go/bin/gomoney-server"]

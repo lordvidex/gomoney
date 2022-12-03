@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    secrets:
+      - postgres_password
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_USER: user
+      POSTGRES_DB: gomoney
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  server:
+    image: gomoney-server
+    depends_on:
+      - db
+    secrets:
+      - database_url
+    environment:
+      - DATABASE_URL_FILE=/run/secrets/database_url
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8002:8080"
+
+
+  api:
+    image: gomoney-api
+    depends_on:
+      - server
+    ports:
+      - "8000:8080"
+
+  telegram:
+    image: gomoney-telegram
+    depends_on:
+      - server
+    ports:
+      - "8001:8080"
+
+volumes:
+  db:
+secrets:
+  database_url:
+    external: true
+  postgres_password:
+    external: true
+

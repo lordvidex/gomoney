@@ -7,43 +7,51 @@ option go_package = "github.com/lordvidex/gomoney/api/internal/grpc";
 
 
 // messages
+message StringID {
+  string id = 1;
+}
+message IntID {
+  int64 id = 1;
+}
+
 message Phone {
-    string number = 1;
+  string number = 1;
 }
 
 message User {
-    string id = 1;
-    string name = 2;
-    string phone = 3;
-    
-    message ID {
-        string id = 1;
-    }
+  string id = 1;
+  string name = 2;
+  string phone = 3;
 }
 
 message Account {
-    int64 id = 1;
-    string title = 2;
-    string description = 3;
-    double balance = 4;
-    Currency currency = 5;
-    bool is_blocked = 6;
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  double balance = 4;
+  Currency currency = 5;
+  bool is_blocked = 6;
+}
+
+message ManyAccounts {
+  StringID owner = 1;
+  repeated Account accounts = 2;
 }
 
 enum Currency {
-    USD = 0;
-    RUB = 1;
-    NGN = 2;
+  USD = 0;
+  RUB = 1;
+  NGN = 2;
 }
 
 // services
 
 service UserService {
-    rpc GetUserByPhone(Phone) returns (User) {}
-    rpc CreateUser(User) returns (User.ID) {}
+  rpc GetUserByPhone(Phone) returns (User) {}
+  rpc CreateUser(User) returns (StringID) {}
 }
 
 service AccountService {
-    rpc GetAccounts(User.ID) returns (User) {}
-    rpc CreateAccount(User) returns (User.ID) {}
+  rpc GetAccounts(StringID) returns (ManyAccounts) {} // get all accounts of a user
+  rpc CreateAccount(ManyAccounts) returns (IntID) {} // create an account for a user
 }

@@ -5,12 +5,10 @@ services:
     container_name: "gomoney-db" 
     image: postgres:latest
     restart: always
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: user
-      POSTGRES_DB: gomoney
+    env_file:
+      - ./db.env
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
     healthcheck:
@@ -19,25 +17,33 @@ services:
       timeout: 30s
       retries: 5
 
-  server: 
+  server-dev:
     container_name: "gomoney-grpc-server"
+    volumes:
+      - ./server:/go/src/github.com/lordvidex/gomoney/server
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/gomoney
+      - DATABASE_URL=${DATABASE_URL}
     build:
-      dockerfile: deployments/Dockerfile.server
+      dockerfile: deployments/Dockerfile-server
+      target: development
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - 8002:8080
+      - "8002:8080"
         
   
   api:
     container_name: "gomoney-api-server"
+    volumes:
+      - ./api:/go/src/github.com/lordvidex/gomoney-api/api
+    environment:
+      - GRPC_SERVER=server-dev:8080
     build: 
-      dockerfile: deployments/Dockerfile.api
+      dockerfile: deployments/Dockerfile-api
+      target: development
     depends_on:
-      - server
+      - server-dev
     ports:
       - "8000:8080"
 
@@ -45,8 +51,6 @@ services:
     container_name: "gomoney-telegram-server"
     build:
       dockerfile: deployments/Dockerfile.telegram
-    depends_on:
-      - server
     ports:
       - "8001:8080"
 

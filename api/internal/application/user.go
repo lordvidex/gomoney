@@ -1,53 +1,52 @@
 package application
 
 import (
-	"time"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/lordvidex/gomoney/api/internal/token"
+	"context"
+	"github.com/google/uuid"
+	"github.com/lordvidex/gomoney/api/internal/core"
+	"github.com/lordvidex/gomoney/pkg/gomoney"
+	"github.com/pkg/errors"
 )
 
-type loginUserReq struct {
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
+type CreateUserParam struct {
+	Name     string
+	Phone    string
+	Password string
 }
 
-func (s *Server) login(ctx *fiber.Ctx) error {
-	var req loginUserReq
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-		return err
-	}
+type CreateUserCommand interface {
+	Handle(context.Context, CreateUserParam) (string, error)
+}
 
-	// TODO: Request to gomoney service grpc to authenticate user's credentials
-	// If credentials are valid, generate a token and return it to the user
-	// If credentials are invalid, return an error
+type createUserCommandImpl struct {
+	srv  Service
+	repo Repository
+}
 
-	duration := 24 * time.Hour // 1 Day
-	token, err := s.maker.CreateToken(req.Phone, duration)
+func NewCreateUserCommand(srv Service, repo Repository) CreateUserCommand {
+	return &createUserCommandImpl{srv, repo}
+}
+
+func (c *createUserCommandImpl) Handle(ctx context.Context, p CreateUserParam) (string, error) {
+	userID, err := c.srv.CreateUser(ctx, p)
 	if err != nil {
-		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-		return err
+		return "", err
 	}
-
-	ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"access_token": token,
-	})
-	return nil
-}
-
-func (server *Server) getUser(ctx *fiber.Ctx) error {
-	payload := ctx.Locals(payloadHeader).(*token.Payload)
-
-	_ = payload
-
-	// TODO: Request to gomoney service grpc to get user's details
-	// If user is found, return user's details
-	// If error occurs, return an error
-
-	return nil
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return "", err
+	}
+	apiUser := core.ApiUser{
+		User: gomoney.User{
+			Name:  p.Name,
+			Phone: p.Phone,
+			ID:    userUUID,
+		},
+		Password: p.Password,
+	}
+	err = c.repo.SaveUser(ctx, &apiUser)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to save created user to database")
+	}
+	return userID, nil
 }

@@ -1,4 +1,4 @@
-package token
+package core
 
 import (
 	"errors"
@@ -15,8 +15,8 @@ var (
 type Payload struct {
 	ID       uuid.UUID
 	Phone    string    `json:"phone"`
-	IssuedAt time.Time `json:"issued_at"`
-	ExpireAt time.Time `json:"expire_at"`
+	IssuedAt time.Time `json:"iat"`
+	ExpireAt time.Time `json:"exp"`
 }
 
 func NewPayload(phone string, duration time.Duration) (*Payload, error) {
