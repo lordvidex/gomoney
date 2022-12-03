@@ -47,7 +47,7 @@ func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
 	})
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err,
+			"error": err.Error(),
 		})
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{

@@ -9,7 +9,7 @@ func New(repo Repository, maker TokenHelper, service Service) *Usecases {
 		},
 		Command: Command{
 			CreateUser:    NewCreateUserCommand(service, repo),
-			Login:         NewLoginCommand(repo, maker),
+			Login:         NewLoginCommand(repo, maker, service),
 			CreateAccount: NewCreateAccountCommand(service),
 		},
 	}

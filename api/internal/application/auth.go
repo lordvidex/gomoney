@@ -18,10 +18,11 @@ type LoginCommand interface {
 type loginCommandImpl struct {
 	repo Repository
 	tok  TokenHelper
+	srv  Service
 }
 
-func NewLoginCommand(repo Repository, tok TokenHelper) LoginCommand {
-	return &loginCommandImpl{repo, tok}
+func NewLoginCommand(repo Repository, tok TokenHelper, srv Service) LoginCommand {
+	return &loginCommandImpl{repo, tok, srv}
 }
 
 func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.ApiUserWithToken, error) {
@@ -31,6 +32,11 @@ func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.
 	}
 	if user.Password != param.Password {
 		return nil, ErrInvalidLogin
+	}
+	// get the user from the service to confirm
+	user, err = l.srv.GetUserByPhone(ctx, user.Phone)
+	if err != nil {
+		return nil, ErrUserDeleted
 	}
 	token, err := l.tok.CreateToken(core.Payload{Phone: user.Phone})
 	if err != nil {
