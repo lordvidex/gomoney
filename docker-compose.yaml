@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db:/var/lib/postgresql/data
+        - db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "user", "-d", "gomoney"]
       interval: 10s
@@ -50,7 +50,7 @@ services:
   telegram:
     container_name: "gomoney-telegram-server"
     build:
-      dockerfile: deployments/Dockerfile.telegram
+      dockerfile: deployments/Dockerfile-telegram
     ports:
       - "8001:8080"
 
