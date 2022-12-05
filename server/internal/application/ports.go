@@ -2,16 +2,17 @@
 package application
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
 type UserRepository interface {
-	CreateUser(CreateUserArg) (uuid.UUID, error)
-	GetUserByPhone(phone string) (gomoney.User, error)
+	CreateUser(ctx context.Context, arg CreateUserArg) (uuid.UUID, error)
+	GetUserByPhone(ctx context.Context, phone string) (gomoney.User, error)
 }
 
 type AccountRepository interface {
-	CreateAccount(arg CreateAccountArg) (int64, error)
-	// TODO: Add more repo methods based on the application needs
+	CreateAccount(ctx context.Context, arg CreateAccountArg) (int64, error)
+	GetAccountsForUser(ctx context.Context, userID uuid.UUID) ([]*gomoney.Account, error)
 }
