@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
@@ -13,15 +14,15 @@ type CreateAccountArg struct {
 }
 
 type CreateAccountCommand interface {
-	Handle(CreateAccountArg) (int64, error)
+	Handle(context.Context, CreateAccountArg) (int64, error)
 }
 
 type createAccountCommandImpl struct {
 	repository AccountRepository
 }
 
-func (c *createAccountCommandImpl) Handle(arg CreateAccountArg) (int64, error) {
-	return c.repository.CreateAccount(arg)
+func (c *createAccountCommandImpl) Handle(ctx context.Context, arg CreateAccountArg) (int64, error) {
+	return c.repository.CreateAccount(ctx, arg)
 }
 
 func NewCreateAccountCommand(repository AccountRepository) CreateAccountCommand {

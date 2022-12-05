@@ -1,6 +1,9 @@
 package application
 
-import "github.com/google/uuid"
+import (
+	"context"
+	"github.com/google/uuid"
+)
 
 type CreateUserArg struct {
 	Name  string
@@ -8,15 +11,15 @@ type CreateUserArg struct {
 }
 
 type CreateUserCommand interface {
-	Handle(CreateUserArg) (uuid.UUID, error)
+	Handle(context.Context, CreateUserArg) (uuid.UUID, error)
 }
 
 type createUserCommandImpl struct {
 	repository UserRepository
 }
 
-func (c *createUserCommandImpl) Handle(arg CreateUserArg) (uuid.UUID, error) {
-	return c.repository.CreateUser(arg)
+func (c *createUserCommandImpl) Handle(ctx context.Context, arg CreateUserArg) (uuid.UUID, error) {
+	return c.repository.CreateUser(ctx, arg)
 }
 
 func NewCreateUserCommand(repository UserRepository) CreateUserCommand {

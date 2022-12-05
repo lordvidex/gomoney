@@ -4,10 +4,12 @@ package application
 func New(ur UserRepository, ar AccountRepository) *UseCases {
 	return &UseCases{
 		Query: Query{
-			GetUser: NewGetUserQuery(ur),
+			GetUser:            NewGetUserQuery(ur),
+			GetAccountsForUser: NewGetUserAccountsQuery(ar),
 		},
 		Command: Command{
-			CreateUser: NewCreateUserCommand(ur),
+			CreateUser:    NewCreateUserCommand(ur),
+			CreateAccount: NewCreateAccountCommand(ar),
 		},
 	}
 }
@@ -18,9 +20,11 @@ type UseCases struct {
 }
 
 type Query struct {
-	GetUser GetUserQuery
+	GetUser            GetUserQuery
+	GetAccountsForUser GetUserAccountsQuery
 }
 
 type Command struct {
-	CreateUser CreateUserCommand
+	CreateUser    CreateUserCommand
+	CreateAccount CreateAccountCommand
 }

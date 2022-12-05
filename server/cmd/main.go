@@ -76,7 +76,7 @@ func initDB(c *config.Config) (*pgx.Conn, error) {
 }
 
 func runMigrations(c *config.Config) error {
-	m, err := migrate.New("file:///migrations", c.Get("DATABASE_URL"))
+	m, err := migrate.New("file://server/internal/adapters/postgres/migrations", c.Get("DATABASE_URL"))
 	if err != nil {
 		return errors.Wrap(err, "failed to run migrations")
 	}
