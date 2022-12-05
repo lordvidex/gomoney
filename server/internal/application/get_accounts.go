@@ -11,7 +11,7 @@ type GetUserAccountsParam struct {
 }
 
 type GetUserAccountsQuery interface {
-	Handle(ctx context.Context, param GetUserAccountsParam) ([]*gomoney.Account, error)
+	Handle(ctx context.Context, param GetUserAccountsParam) ([]gomoney.Account, error)
 }
 
 type getUserAccountsImpl struct {
@@ -22,6 +22,6 @@ func NewGetUserAccountsQuery(repo AccountRepository) GetUserAccountsQuery {
 	return &getUserAccountsImpl{repo: repo}
 }
 
-func (g *getUserAccountsImpl) Handle(ctx context.Context, param GetUserAccountsParam) ([]*gomoney.Account, error) {
+func (g *getUserAccountsImpl) Handle(ctx context.Context, param GetUserAccountsParam) ([]gomoney.Account, error) {
 	return g.repo.GetAccountsForUser(ctx, param.UserID)
 }

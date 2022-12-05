@@ -14,5 +14,5 @@ type UserRepository interface {
 
 type AccountRepository interface {
 	CreateAccount(ctx context.Context, arg CreateAccountArg) (int64, error)
-	GetAccountsForUser(ctx context.Context, userID uuid.UUID) ([]*gomoney.Account, error)
+	GetAccountsForUser(ctx context.Context, userID uuid.UUID) ([]gomoney.Account, error)
 }

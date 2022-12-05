@@ -39,9 +39,10 @@ message ManyAccounts {
 }
 
 enum Currency {
-  USD = 0;
-  RUB = 1;
-  NGN = 2;
+  NONE = 0;
+  USD = 1;
+  RUB = 2;
+  NGN = 3;
 }
 
 // services
