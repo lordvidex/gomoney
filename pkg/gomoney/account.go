@@ -9,6 +9,6 @@ type Account struct {
 	IsBlocked   bool
 }
 
-func (a *Account) CanTransfer() bool {
-	return a.Balance > 0 && !a.IsBlocked
+func (a *Account) CanTransfer(amount float64) bool {
+	return a.Balance >= amount && !a.IsBlocked
 }

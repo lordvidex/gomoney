@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/lordvidex/gomoney/server/internal/adapters"
 	"log"
 	"net"
 
@@ -39,9 +40,10 @@ func main() {
 	// driven adapters
 	uRepo := postgres.NewUser(conn)
 	aRepo := postgres.NewAccount(conn)
+	locker := &adapters.Locker{}
 
 	// application
-	app := application.New(uRepo, aRepo)
+	app := application.New(uRepo, aRepo, locker)
 
 	// grpc driver
 	server := grpc.NewServer()
