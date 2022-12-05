@@ -4,20 +4,21 @@ package grpc
 import (
 	context "context"
 
+	pb "github.com/lordvidex/gomoney/pkg/grpc"
 	"github.com/lordvidex/gomoney/server/internal/application"
 )
 
 type handler struct {
 	application *application.UseCases
-	UnimplementedAccountServiceServer
-	UnimplementedUserServiceServer
+	pb.UnimplementedAccountServiceServer
+	pb.UnimplementedUserServiceServer
 }
 
 func NewHandler(application *application.UseCases) *handler {
 	return &handler{application: application}
 }
 
-func (h *handler) CreateUser(_ context.Context, u *User) (*User_ID, error) {
+func (h *handler) CreateUser(_ context.Context, u *pb.User) (*pb.StringID, error) {
 	id, err := h.application.CreateUser.Handle(application.CreateUserArg{
 		Phone: u.Phone,
 		Name:  u.Name,
@@ -25,17 +26,17 @@ func (h *handler) CreateUser(_ context.Context, u *User) (*User_ID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &User_ID{Id: id.String()}, nil
+	return &pb.StringID{Id: id.String()}, nil
 }
 
-func (h *handler) GetUserByPhone(_ context.Context, p *Phone) (*User, error) {
+func (h *handler) GetUserByPhone(_ context.Context, p *pb.Phone) (*pb.User, error) {
 	user, err := h.application.GetUser.Handle(application.GetUserQueryArg{
 		Phone: p.GetNumber(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &User{
+	return &pb.User{
 		Id:    user.ID.String(),
 		Phone: user.Phone,
 		Name:  user.Name,

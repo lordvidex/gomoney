@@ -3,7 +3,7 @@ syntax = "proto3";
 package grpc;
 // import "google/protobuf/empty.proto";
 
-option go_package = "github.com/lordvidex/gomoney/api/internal/grpc";
+option go_package = "github.com/lordvidex/gomoney/pkg/grpc";
 
 
 // messages
@@ -48,7 +48,7 @@ enum Currency {
 
 service UserService {
   rpc GetUserByPhone(Phone) returns (User) {}
-  rpc CreateUser(User) returns (StringID) {}
+  rpc CreateUser(User) returns (StringID) {}  
 }
 
 service AccountService {

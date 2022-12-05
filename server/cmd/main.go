@@ -2,19 +2,21 @@ package main
 
 import (
 	"context"
+	"log"
+	"net"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v4"
 	"github.com/lordvidex/gomoney/pkg/config"
-	mygrpc "github.com/lordvidex/gomoney/server/internal/adapters/grpc"
+	mygrpc "github.com/lordvidex/gomoney/pkg/grpc"
+	myhandler "github.com/lordvidex/gomoney/server/internal/adapters/grpc"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres"
 	"github.com/lordvidex/gomoney/server/internal/application"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
 )
 
 func main() {
@@ -29,7 +31,10 @@ func main() {
 	defer conn.Close(context.TODO())
 
 	// run migrations
-	_ = runMigrations(c)
+	err = runMigrations(c)
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatal(err)
+	}
 
 	// driven adapters
 	uRepo := postgres.NewUser(conn)
@@ -41,7 +46,7 @@ func main() {
 	// grpc driver
 	server := grpc.NewServer()
 	reflection.Register(server)
-	handler := mygrpc.NewHandler(app)
+	handler := myhandler.NewHandler(app)
 	mygrpc.RegisterAccountServiceServer(server, handler)
 	mygrpc.RegisterUserServiceServer(server, handler)
 
