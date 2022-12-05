@@ -15,7 +15,7 @@ services:
       - db:/var/lib/postgresql/data
 
   server:
-    image: gomoney-server
+    image: lordvidex/gomoney-central:0.1
     depends_on:
       - db
     secrets:
@@ -31,14 +31,18 @@ services:
 
 
   api:
-    image: gomoney-api
+    image: lordvidex/gomoney-api:0.1
+    secrets:
+      - grpc_server_url
+    environment:
+      - GRPC_SERVER_FILE=/run/secrets/grpc_server_url
     depends_on:
       - server
     ports:
       - "8000:8080"
 
   telegram:
-    image: gomoney-telegram
+    image: lordvidex/gomoney-telegram:0.1
     depends_on:
       - server
     ports:
@@ -51,4 +55,5 @@ secrets:
     external: true
   postgres_password:
     external: true
-
+  grpc_server_url:
+    external: true
