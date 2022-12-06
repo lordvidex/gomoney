@@ -43,3 +43,7 @@ func (c *Config) Get(key string) (result string) {
 		return os.Getenv(key)
 	}
 }
+
+func (c *Config) Set(key, value string) {
+	c.m[key] = value
+}

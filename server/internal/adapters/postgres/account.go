@@ -41,22 +41,6 @@ func convertAccounts(sl []*sqlgen.Account) []gomoney.Account {
 	return x
 }
 
-func convertAccount(curr *sqlgen.Account) gomoney.Account {
-	x := gomoney.Account{
-		Id:       curr.ID,
-		Title:    curr.Title,
-		Currency: gomoney.Currency(curr.Currency),
-	}
-	if curr.Description.Valid {
-		x.Description = curr.Description.String
-	}
-	if curr.IsBlocked.Valid {
-		x.IsBlocked = curr.IsBlocked.Bool
-	}
-	_ = curr.Balance.AssignTo(&(x.Balance))
-	return x
-}
-
 func (r *accountRepo) CreateAccount(ctx context.Context, arg app.CreateAccountArg) (int64, error) {
 	id, err := r.Queries.CreateAccount(ctx, sqlgen.CreateAccountParams{
 		Title:       arg.Title,
@@ -78,35 +62,56 @@ func (r *accountRepo) Transfer(ctx context.Context, transaction *gomoney.Transac
 	}
 	defer tx.Rollback(ctx)
 	q := r.WithTx(tx)
+
+	// scan amount
+	amount := pgtype.Numeric{}
+	err = amount.Set(transaction.Amount)
+
 	// withdraw from source account
-	n := pgtype.Numeric{}
-	_ = n.Scan(transaction.Amount)
-	err = q.Withdraw(ctx, sqlgen.WithdrawParams{
-		ID:     transaction.From.Id,
-		Amount: n,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to withdraw from source account")
+	if transaction.From != nil {
+		err = q.Withdraw(ctx, sqlgen.WithdrawParams{
+			ID:     transaction.From.Id,
+			Amount: amount,
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to withdraw from source account")
+		}
 	}
 
 	// deposit to destination account
-	err = q.Deposit(ctx, sqlgen.DepositParams{
-		ID:     transaction.To.Id,
-		Amount: n,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to deposit to destination account")
+	if transaction.To != nil {
+		err = q.Deposit(ctx, sqlgen.DepositParams{
+			ID:     transaction.To.Id,
+			Amount: amount,
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to deposit to destination account")
+		}
 	}
 
 	// create transaction record
-	return q.SaveTransaction(ctx, sqlgen.SaveTransactionParams{
-		ID:            transaction.ID,
-		CreatedAt:     transaction.Created,
-		FromAccountID: mustInt64(transaction.From.Id),
-		ToAccountID:   mustInt64(transaction.To.Id),
-		Amount:        mustNumeric(transaction.Amount),
-		Type:          mapTxType(transaction.Type),
+	err = q.SaveTransaction(ctx, sqlgen.SaveTransactionParams{
+		ID:        transaction.ID,
+		CreatedAt: transaction.Created,
+		FromAccountID: func() sql.NullInt64 {
+			if transaction.From != nil {
+				return mustInt64(transaction.From.Id)
+			}
+			return sql.NullInt64{}
+		}(),
+		ToAccountID: func() sql.NullInt64 {
+			if transaction.To != nil {
+				return mustInt64(transaction.To.Id)
+			}
+			return sql.NullInt64{}
+		}(),
+		Amount: mustNumeric(transaction.Amount),
+		Type:   mapTxType(transaction.Type),
 	})
+	if err != nil {
+		return errors.Wrap(err, "failed to save transaction record")
+	}
+	return tx.Commit(ctx)
 }
 
 func (r *accountRepo) GetAccountByID(ctx context.Context, accountID int64) (*gomoney.Account, error) {
@@ -121,18 +126,41 @@ func (r *accountRepo) GetAccountByID(ctx context.Context, accountID int64) (*gom
 	return &conv, nil
 }
 
+// convertAccount converts database account to domain account
+func convertAccount(curr *sqlgen.Account) gomoney.Account {
+	x := gomoney.Account{
+		Id:       curr.ID,
+		Title:    curr.Title,
+		Currency: gomoney.Currency(curr.Currency),
+	}
+	if curr.UserID.Valid {
+		x.OwnerID = curr.UserID.UUID
+	}
+	if curr.Description.Valid {
+		x.Description = curr.Description.String
+	}
+	if curr.IsBlocked.Valid {
+		x.IsBlocked = curr.IsBlocked.Bool
+	}
+	_ = curr.Balance.AssignTo(&(x.Balance))
+	return x
+}
+
+// mustInt64 converts int64 to sql.NullInt64
 func mustInt64(s int64) sql.NullInt64 {
 	t := sql.NullInt64{}
 	_ = t.Scan(s)
 	return t
 }
 
+// mustNumeric converts decimal to pgtype.Numeric
 func mustNumeric(s any) pgtype.Numeric {
 	t := pgtype.Numeric{}
-	_ = t.Scan(s)
+	_ = t.Set(s)
 	return t
 }
 
+// mapTxType maps transaction type from domain to database
 func mapTxType(t gomoney.TransactionType) sqlgen.TransactionType {
 	switch t {
 	case gomoney.Deposit:

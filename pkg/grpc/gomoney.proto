@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package grpc;
-// import "google/protobuf/empty.proto";
+ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/lordvidex/gomoney/pkg/grpc";
 
@@ -45,6 +45,29 @@ enum Currency {
   NGN = 3;
 }
 
+enum TransactionType {
+  TRANSFER = 0;
+  DEPOSIT = 1;
+  WITHDRAWAL = 2;
+}
+
+message TransactionParam {
+  double amount = 1;
+  StringID actor = 2;
+  optional int64 from = 3; // if not set, then it's a deposit
+  optional int64 to = 4; // if not set, then it's a withdrawal
+  // note that one of them has to be set
+}
+
+message Transaction {
+  StringID id = 1;
+  double amount = 2;
+  optional Account from = 3;
+  optional Account to = 4;
+  google.protobuf.Timestamp created_at = 5;
+  TransactionType type = 6;
+}
+
 // services
 
 service UserService {
@@ -55,4 +78,10 @@ service UserService {
 service AccountService {
   rpc GetAccounts(StringID) returns (ManyAccounts) {} // get all accounts of a user
   rpc CreateAccount(ManyAccounts) returns (IntID) {} // create an account for a user
+}
+
+service TransactionService {
+  rpc Transfer(TransactionParam) returns (Transaction) {}
+  rpc Deposit(TransactionParam) returns (Transaction) {}
+  rpc Withdraw(TransactionParam) returns (Transaction) {}
 }
