@@ -19,10 +19,11 @@ type loginCommandImpl struct {
 	repo Repository
 	tok  TokenHelper
 	srv  Service
+	ph   PasswordHasher
 }
 
-func NewLoginCommand(repo Repository, tok TokenHelper, srv Service) LoginCommand {
-	return &loginCommandImpl{repo, tok, srv}
+func NewLoginCommand(repo Repository, tok TokenHelper, srv Service, ph PasswordHasher) LoginCommand {
+	return &loginCommandImpl{repo, tok, srv, ph}
 }
 
 func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.ApiUserWithToken, error) {
@@ -30,7 +31,7 @@ func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.
 	if err != nil {
 		return nil, err
 	}
-	if user.Password != param.Password {
+	if err = l.ph.CheckPasswordHash(user.Password, param.Password); err != nil {
 		return nil, ErrInvalidLogin
 	}
 	// get the user from the service to confirm

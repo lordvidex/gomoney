@@ -14,5 +14,15 @@ type UserRepository interface {
 
 type AccountRepository interface {
 	CreateAccount(ctx context.Context, arg CreateAccountArg) (int64, error)
+	// Transfer must atomically update the balance of both accounts in a transaction
+	// and save the transaction itself in the storage layer
+	Transfer(ctx context.Context, tx *gomoney.Transaction) error
 	GetAccountsForUser(ctx context.Context, userID uuid.UUID) ([]gomoney.Account, error)
+	GetAccountByID(ctx context.Context, accountID int64) (*gomoney.Account, error)
+}
+
+// TxLocker is a transaction lock interface that locks `keys`
+// and returns a function that unlocks the keys
+type TxLocker interface {
+	Lock(x any, y ...any) func()
 }

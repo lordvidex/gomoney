@@ -5,6 +5,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v4"
 	"github.com/lordvidex/gomoney/api/internal/adapters/api"
+	"github.com/lordvidex/gomoney/api/internal/adapters/encryption"
 	mgrpc "github.com/lordvidex/gomoney/api/internal/adapters/grpc"
 	"github.com/lordvidex/gomoney/api/internal/adapters/memory"
 	"github.com/lordvidex/gomoney/api/internal/adapters/paseto"
@@ -28,8 +29,11 @@ func main() {
 	service := mgrpc.New(grpconn)
 
 	// create token helper
-	symmetricKey := []byte("01234567890123456789012345678912")
-	th := paseto.New(symmetricKey)
+	symmetricKey := c.Get("SYMMETRIC_KEY")
+	if symmetricKey == "" {
+		log.Fatal("env key 'SYMMETRIC_KEY' not set")
+	}
+	th := paseto.New([]byte(symmetricKey))
 
 	// create repository
 	//dbconn, err := initDB(c)
@@ -43,7 +47,8 @@ func main() {
 	repo := memory.New()
 
 	// bind application
-	app := application.New(repo, th, service)
+	ph := encryption.NewBcryptPasswordHasher()
+	app := application.New(repo, th, service, ph)
 
 	// drive application
 	restHandler := api.New(app)

@@ -28,6 +28,11 @@ func (m *Maker) CreateToken(payload core.Payload) (string, error) {
 func (m *Maker) VerifyToken(token string) (core.Payload, error) {
 	payload := core.Payload{}
 	err := m.paseto.Decrypt(token, m.symmetricKey, &payload, nil)
+
+	if err = payload.Valid(); err != nil {
+		return core.Payload{}, err
+	}
+	
 	return payload, err
 }
 

@@ -18,9 +18,20 @@ type TokenHelper interface {
 	TokenDuration() time.Duration
 }
 
+type PasswordHasher interface {
+	CreatePasswordHash(password string) (string, error)
+	CheckPasswordHash(hashPassword, password string) error
+}
+
 type Service interface {
 	CreateUser(ctx context.Context, param CreateUserParam) (string, error)
 	GetUserByPhone(ctx context.Context, phone string) (*core.ApiUser, error)
+
+	GetAccount(ctx context.Context, accountID int64) (gomoney.Account, error)
 	GetAccounts(ctx context.Context, ID string) ([]gomoney.Account, error)
 	CreateAccount(ctx context.Context, userID string, account *gomoney.Account) (int64, error)
+
+	GetAccountTransfers(ctx context.Context, accountID int64) ([]gomoney.Transaction, error)
+	GetTransfers(ctx context.Context, userID string) ([]gomoney.Transaction, error)
+	CreateTransfer(ctx context.Context, param CreateTransferParam) (int64, error)
 }

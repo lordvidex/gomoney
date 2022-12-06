@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
@@ -56,6 +57,49 @@ func (ns NullCurrency) Value() (driver.Value, error) {
 	return ns.Currency, nil
 }
 
+type TransactionType string
+
+const (
+	TransactionTypeDeposit    TransactionType = "deposit"
+	TransactionTypeWithdrawal TransactionType = "withdrawal"
+	TransactionTypeTransfer   TransactionType = "transfer"
+)
+
+func (e *TransactionType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionType(s)
+	case string:
+		*e = TransactionType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionType: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionType struct {
+	TransactionType TransactionType
+	Valid           bool // Valid is true if TransactionType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionType) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.TransactionType, nil
+}
+
 type Account struct {
 	ID          int64
 	Title       string
@@ -64,6 +108,15 @@ type Account struct {
 	Currency    Currency
 	IsBlocked   sql.NullBool
 	UserID      uuid.NullUUID
+}
+
+type Transaction struct {
+	ID            uuid.UUID
+	Amount        pgtype.Numeric
+	Type          TransactionType
+	CreatedAt     time.Time
+	FromAccountID sql.NullInt64
+	ToAccountID   sql.NullInt64
 }
 
 type User struct {

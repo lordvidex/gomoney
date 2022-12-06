@@ -1,5 +1,7 @@
 package gomoney
 
+import "github.com/google/uuid"
+
 type Account struct {
 	Id          int64
 	Title       string
@@ -7,8 +9,9 @@ type Account struct {
 	Balance     float64
 	Currency    Currency
 	IsBlocked   bool
+	OwnerID     uuid.UUID
 }
 
-func (a *Account) CanTransfer() bool {
-	return a.Balance > 0 && !a.IsBlocked
+func (a *Account) CanTransfer(amount float64) bool {
+	return a.Balance >= amount && !a.IsBlocked
 }
