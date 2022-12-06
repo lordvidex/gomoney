@@ -30,6 +30,9 @@ func main() {
 
 	// create token helper
 	symmetricKey := c.Get("SYMMETRIC_KEY")
+	if symmetricKey == "" {
+		log.Fatal("env key 'SYMMETRIC_KEY' not set")
+	}
 	th := paseto.New([]byte(symmetricKey))
 
 	// create repository
