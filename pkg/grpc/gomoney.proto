@@ -68,6 +68,16 @@ message Transaction {
   TransactionType type = 6;
 }
 
+message ManyTransactions {
+  repeated Transaction transactions = 1;
+  IntID account = 2;
+}
+
+message UserWithAccount {
+  StringID user = 1;
+  IntID account = 2;
+}
+
 // services
 
 service UserService {
@@ -84,4 +94,8 @@ service TransactionService {
   rpc Transfer(TransactionParam) returns (Transaction) {}
   rpc Deposit(TransactionParam) returns (Transaction) {}
   rpc Withdraw(TransactionParam) returns (Transaction) {}
+  // this returns the last 10 transactions for every account owned by user id
+  rpc GetTransactionSummary(StringID) returns (ManyTransactions) {}
+  // this returns all transactions for a particular account owned by user id
+  rpc GetTransactions(UserWithAccount) returns (ManyTransactions) {}
 }
