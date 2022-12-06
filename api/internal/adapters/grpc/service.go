@@ -18,6 +18,7 @@ var (
 type service struct {
 	ucl grpc3.UserServiceClient
 	acl grpc3.AccountServiceClient
+	tcl grpc3.TransferServiceClient
 }
 
 func (s service) CreateUser(ctx context.Context, param application.CreateUserParam) (string, error) {
@@ -86,9 +87,30 @@ func (s service) CreateAccount(ctx context.Context, userID string, acc *gomoney.
 	return accID.GetId(), nil
 }
 
+func (s service) GetAccount(ctx context.Context, accountID int64) (gomoney.Account, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s service) GetAccountTransfers(ctx context.Context, accountID int64) ([]gomoney.Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s service) GetTransfers(ctx context.Context, userID string) ([]gomoney.Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s service) CreateTransfer(ctx context.Context, param application.CreateTransferParam) (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func New(conn grpc.ClientConnInterface) application.Service {
 	return &service{
 		ucl: grpc3.NewUserServiceClient(conn),
 		acl: grpc3.NewAccountServiceClient(conn),
+		tcl: grpc3.NewTransferServiceClient(conn),
 	}
 }

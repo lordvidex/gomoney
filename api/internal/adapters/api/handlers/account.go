@@ -3,34 +3,26 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/lordvidex/gomoney/api/internal/application"
-	"github.com/lordvidex/gomoney/api/internal/core"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-type createAccountReq struct {
-	Title       string
-	Description string
-	Currency    gomoney.Currency
-}
-
-func userFromCtx(ctx *fiber.Ctx) (*core.ApiUser, error) {
-	u, ok := ctx.Locals(AuthUserPayload).(*core.ApiUser)
-	if !ok {
-		return nil, ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "User is unauthorized",
-		})
-	}
-	return u, nil
-}
-
-func parseBody(ctx *fiber.Ctx, obj interface{}) error {
-	if err := ctx.BodyParser(obj); err != nil {
-		_ = ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+func GetAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
+	// get the user from the context
+	u, err := userFromCtx(ctx)
+	if err != nil {
 		return err
 	}
-	return nil
+
+	// get account from repository
+	accounts, err := uc.ViewAccounts.Handle(ctx.UserContext(), application.ViewAccountsParam{
+		UserID: u.ID,
+	})
+	if err != nil {
+		parseDatabaseInternalError(ctx, err)
+		return err
+	}
+	
+	return ctx.Status(fiber.StatusOK).JSON(accounts)
 }
 
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -48,6 +40,12 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 		})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(accounts)
+}
+
+type createAccountReq struct {
+	Title       string
+	Description string
+	Currency    gomoney.Currency
 }
 
 func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {

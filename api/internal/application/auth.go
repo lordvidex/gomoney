@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"github.com/lordvidex/gomoney/api/internal/core"
+	"github.com/lordvidex/gomoney/pkg/password"
 	"github.com/pkg/errors"
 )
 
@@ -30,7 +31,7 @@ func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.
 	if err != nil {
 		return nil, err
 	}
-	if user.Password != param.Password {
+	if err = password.CheckPasswordHash(user.Password, param.Password); err != nil {
 		return nil, ErrInvalidLogin
 	}
 	// get the user from the service to confirm

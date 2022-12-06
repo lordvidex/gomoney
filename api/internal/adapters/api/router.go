@@ -29,12 +29,15 @@ func (h *router) setupRoutes() {
 	// Authenticated EndPoints
 
 	// -	Accounts EndPoint
+	api.Get("/account", auth, h.wrap(handlers.GetAccount))
 	api.Get("/account", auth, h.wrap(handlers.GetAccounts))
 	api.Post("/account", auth, h.wrap(handlers.CreateAccount))
 	//auth.Get("/account:id", h)
+
 	// -	Transactions EndPoint
-	//apiAuth.Post("/api/transactions", h.createTransaction)
-	//apiAuth.Get("/api/transactions/:id", h.getTransactions)
+	api.Post("/api/transactions", auth, h.wrap(handlers.CreateTransfers))
+	api.Get("/api/transactions/", auth, h.wrap(handlers.GetTransfers))
+	api.Get("/api/transactions/:id", auth, h.wrap(handlers.GetAccountTransfers))
 }
 
 func (h *router) Listen() error {

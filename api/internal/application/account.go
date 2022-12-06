@@ -27,6 +27,26 @@ func (c *createAccountImpl) Handle(ctx context.Context, param CreateAccountParam
 	return c.srv.CreateAccount(ctx, param.UserID.String(), &param.Account)
 }
 
+type ViewAccountParam struct {
+	AccountID int64
+}
+
+type ViewAccountQuery interface {
+	Handle(ctx context.Context, param ViewAccountParam) (gomoney.Account, error)
+}
+
+type viewAccountImpl struct {
+	srv Service
+}
+
+func NewViewAccountQuery(srv Service) ViewAccountQuery {
+	return &viewAccountImpl{srv}
+}
+
+func (v *viewAccountImpl) Handle(ctx context.Context, param ViewAccountParam) (gomoney.Account, error) {
+	return v.srv.GetAccount(ctx, param.AccountID)
+}
+
 type ViewAccountsParam struct {
 	UserID uuid.UUID
 }
