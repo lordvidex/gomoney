@@ -11,12 +11,12 @@ import (
 )
 
 // NewConn creates a new database connection.
-func NewConn(c *config.Config) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.TODO(), c.Get("DATABASE_URL"))
+func NewConn(ctx context.Context, c *config.Config) (*pgx.Conn, error) {
+	conn, err := pgx.Connect(ctx, c.Get("DATABASE_URL"))
 	if err != nil {
 		return nil, err
 	}
-	err = conn.Ping(context.TODO())
+	err = conn.Ping(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to ping database")
 	}

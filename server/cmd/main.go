@@ -5,6 +5,7 @@ import (
 	"github.com/lordvidex/gomoney/server/internal/adapters"
 	"log"
 	"net"
+	"time"
 
 	"github.com/lordvidex/gomoney/pkg/config"
 	mygrpc "github.com/lordvidex/gomoney/pkg/grpc"
@@ -16,20 +17,23 @@ import (
 )
 
 func main() {
+	appCtx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
 	// read config
 	c := config.New()
 
 	// initialise the database connection
-	conn, err := postgres.NewConn(c)
+	conn, err := postgres.NewConn(appCtx, c)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close(context.TODO())
+	defer conn.Close(appCtx)
 
 	// driven adapters
 	uRepo := postgres.NewUser(conn)
 	aRepo := postgres.NewAccount(conn)
-	locker := &adapters.Locker{}
+	locker := adapters.NewLocker(appCtx, time.Minute)
 
 	// application
 	app := application.New(uRepo, aRepo, locker)

@@ -17,7 +17,7 @@ The GoMoney library contains the following subpackages:
 - REST API server 
 - Data server
 
-### Telegram server [/telegram](/telegram)
+### Telegram server [/telegram](/server/internal/adapters/telegram)
 
 The telegram server is a simple telegram bot that allows users to interact with the GoMoney API. It is written in Go and uses the [telego library](https://github.com/SakoDroid/telego).
 

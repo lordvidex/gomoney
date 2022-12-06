@@ -35,7 +35,7 @@ func testConfig() *config.Config {
 
 func getDBConnection() *pgx.Conn {
 	if _conn == nil {
-		con, err := NewConn(testConfig())
+		con, err := NewConn(context.TODO(), testConfig())
 		if err != nil {
 			panic(err)
 		}
