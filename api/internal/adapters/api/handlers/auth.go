@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/lordvidex/gomoney/api/internal/application"
-	"github.com/lordvidex/gomoney/pkg/password"
 )
 
 type loginUserReq struct {
@@ -42,15 +41,10 @@ func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return err
 	}
 
-	hashPassword, err := password.CreatePasswordHash(req.Password)
-	if err != nil {
-		return err
-	}
-
-	_, err = uc.CreateUser.Handle(ctx.UserContext(), application.CreateUserParam{
+	_, err := uc.CreateUser.Handle(ctx.UserContext(), application.CreateUserParam{
 		Name:     req.Name,
 		Phone:    req.Phone,
-		Password: hashPassword,
+		Password: req.Password,
 	})
 
 	if err != nil {

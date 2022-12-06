@@ -1,6 +1,6 @@
 package application
 
-func New(repo Repository, maker TokenHelper, service Service) *Usecases {
+func New(repo Repository, maker TokenHelper, service Service, hasher PasswordHasher) *Usecases {
 	return &Usecases{
 		Query: Query{
 			GetAPIUser:           NewAPIUserQuery(repo, maker),
@@ -10,8 +10,8 @@ func New(repo Repository, maker TokenHelper, service Service) *Usecases {
 			ViewTransfers:        NewViewTransfersQuery(service, repo),
 		},
 		Command: Command{
-			CreateUser:     NewCreateUserCommand(service, repo),
-			Login:          NewLoginCommand(repo, maker, service),
+			CreateUser:     NewCreateUserCommand(service, repo, hasher),
+			Login:          NewLoginCommand(repo, maker, service, hasher),
 			CreateAccount:  NewCreateAccountCommand(service),
 			CreateTransfer: NewCreateTransferCommand(service, repo),
 		},

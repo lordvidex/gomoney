@@ -18,7 +18,7 @@ var (
 type service struct {
 	ucl grpc3.UserServiceClient
 	acl grpc3.AccountServiceClient
-	tcl grpc3.TransferServiceClient
+	tcl grpc3.TransactionServiceClient
 }
 
 func (s service) CreateUser(ctx context.Context, param application.CreateUserParam) (string, error) {
@@ -111,6 +111,6 @@ func New(conn grpc.ClientConnInterface) application.Service {
 	return &service{
 		ucl: grpc3.NewUserServiceClient(conn),
 		acl: grpc3.NewAccountServiceClient(conn),
-		tcl: grpc3.NewTransferServiceClient(conn),
+		tcl: grpc3.NewTransactionServiceClient(conn),
 	}
 }

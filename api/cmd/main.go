@@ -10,6 +10,7 @@ import (
 	"github.com/lordvidex/gomoney/api/internal/adapters/paseto"
 	"github.com/lordvidex/gomoney/api/internal/application"
 	"github.com/lordvidex/gomoney/pkg/config"
+	"github.com/lordvidex/gomoney/pkg/encryption"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -28,8 +29,8 @@ func main() {
 	service := mgrpc.New(grpconn)
 
 	// create token helper
-	symmetricKey := []byte("01234567890123456789012345678912")
-	th := paseto.New(symmetricKey)
+	symmetricKey := c.Get("SYMMETRIC_KEY")
+	th := paseto.New([]byte(symmetricKey))
 
 	// create repository
 	//dbconn, err := initDB(c)
@@ -43,7 +44,8 @@ func main() {
 	repo := memory.New()
 
 	// bind application
-	app := application.New(repo, th, service)
+	ph := encryption.NewBcryptPasswordHasher()
+	app := application.New(repo, th, service, ph)
 
 	// drive application
 	restHandler := api.New(app)

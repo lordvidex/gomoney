@@ -18,6 +18,11 @@ type TokenHelper interface {
 	TokenDuration() time.Duration
 }
 
+type PasswordHasher interface {
+	CreatePasswordHash(password string) (string, error)
+	CheckPasswordHash(hashPassword, password string) error
+}
+
 type Service interface {
 	CreateUser(ctx context.Context, param CreateUserParam) (string, error)
 	GetUserByPhone(ctx context.Context, phone string) (*core.ApiUser, error)

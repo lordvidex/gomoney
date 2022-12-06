@@ -21,13 +21,20 @@ type CreateUserCommand interface {
 type createUserCommandImpl struct {
 	srv  Service
 	repo Repository
+	ph   PasswordHasher
 }
 
-func NewCreateUserCommand(srv Service, repo Repository) CreateUserCommand {
-	return &createUserCommandImpl{srv, repo}
+func NewCreateUserCommand(srv Service, repo Repository, ph PasswordHasher) CreateUserCommand {
+	return &createUserCommandImpl{srv, repo, ph}
 }
 
 func (c *createUserCommandImpl) Handle(ctx context.Context, p CreateUserParam) (string, error) {
+	hashPassword, err := c.ph.CreatePasswordHash(p.Password)
+	if err != nil {
+		return "", errors.Wrap(err, "error hashing password")
+	}
+
+	p.Password = hashPassword
 	userID, err := c.srv.CreateUser(ctx, p)
 	if err != nil {
 		return "", err
