@@ -11,6 +11,7 @@ var (
 	ErrDepositAccountNotSpecified    = errors.New("deposit transaction requires one account to deposit to")
 	ErrWithdrawalAccountNotSpecified = errors.New("withdrawal transaction requires one account to withdraw from")
 	ErrInvalidWithdrawalAccount      = errors.New("account is blocked or has insufficient balance")
+	ErrDifferentCurrencies           = errors.New("transfer must be between accounts of the same currencies")
 )
 
 type TransactionType int
@@ -59,6 +60,12 @@ func (t *Transaction) Validate() error {
 		if t.From == nil || t.To == nil {
 			return ErrTransferAccountsNotSpecified
 		}
+		if t.From.Currency != t.To.Currency {
+			return ErrDifferentCurrencies
+		}
+		if !t.From.CanTransfer(t.Amount) {
+			return ErrInvalidWithdrawalAccount
+		}
 	case Deposit:
 		if t.To == nil {
 			return ErrDepositAccountNotSpecified
@@ -67,9 +74,9 @@ func (t *Transaction) Validate() error {
 		if t.From == nil {
 			return ErrWithdrawalAccountNotSpecified
 		}
-	}
-	if !t.From.CanTransfer(t.Amount) {
-		return ErrInvalidWithdrawalAccount
+		if !t.From.CanTransfer(t.Amount) {
+			return ErrInvalidWithdrawalAccount
+		}
 	}
 	return nil
 }

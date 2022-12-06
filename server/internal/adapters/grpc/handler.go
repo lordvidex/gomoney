@@ -7,23 +7,25 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/lordvidex/gomoney/pkg/grpc"
-	"github.com/lordvidex/gomoney/server/internal/application"
+	app "github.com/lordvidex/gomoney/server/internal/application"
 )
 
 type Handler struct {
-	application *application.UseCases
+	application *app.UseCases
 	pb.UnimplementedAccountServiceServer
 	pb.UnimplementedUserServiceServer
+	pb.UnimplementedTransactionServiceServer
 }
 
-func NewHandler(application *application.UseCases) *Handler {
+func NewHandler(application *app.UseCases) *Handler {
 	return &Handler{application: application}
 }
 
 func (h *Handler) CreateUser(ctx context.Context, u *pb.User) (*pb.StringID, error) {
-	id, err := h.application.CreateUser.Handle(ctx, application.CreateUserArg{
+	id, err := h.application.CreateUser.Handle(ctx, app.CreateUserArg{
 		Phone: u.Phone,
 		Name:  u.Name,
 	})
@@ -34,7 +36,7 @@ func (h *Handler) CreateUser(ctx context.Context, u *pb.User) (*pb.StringID, err
 }
 
 func (h *Handler) GetUserByPhone(ctx context.Context, p *pb.Phone) (*pb.User, error) {
-	user, err := h.application.GetUser.Handle(ctx, application.GetUserQueryArg{
+	user, err := h.application.GetUser.Handle(ctx, app.GetUserQueryArg{
 		Phone: p.GetNumber(),
 	})
 	if err != nil {
@@ -52,7 +54,7 @@ func (h *Handler) GetAccounts(ctx context.Context, id *pb.StringID) (*pb.ManyAcc
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user id")
 	}
-	accs, err := h.application.GetAccountsForUser.Handle(ctx, application.GetUserAccountsParam{
+	accs, err := h.application.GetAccountsForUser.Handle(ctx, app.GetUserAccountsParam{
 		UserID: uid,
 	})
 	if err != nil {
@@ -60,20 +62,14 @@ func (h *Handler) GetAccounts(ctx context.Context, id *pb.StringID) (*pb.ManyAcc
 	}
 	accounts := make([]*pb.Account, len(accs))
 	for i, acc := range accs {
-		accounts[i] = &pb.Account{
-			Id:          acc.Id,
-			Title:       acc.Title,
-			Description: acc.Description,
-			Balance:     acc.Balance,
-			Currency:    pb.Currency(pb.Currency_value[string(acc.Currency)]),
-			IsBlocked:   acc.IsBlocked,
-		}
+		accounts[i] = mapAcctToPb(&acc)
 	}
 	return &pb.ManyAccounts{
 		Accounts: accounts,
 		Owner:    id,
 	}, nil
 }
+
 func (h *Handler) CreateAccount(ctx context.Context, param *pb.ManyAccounts) (*pb.IntID, error) {
 	// account
 	if len(param.GetAccounts()) != 1 {
@@ -91,7 +87,7 @@ func (h *Handler) CreateAccount(ctx context.Context, param *pb.ManyAccounts) (*p
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user id, please provide uuid")
 	}
-	accid, err := h.application.CreateAccount.Handle(ctx, application.CreateAccountArg{
+	accid, err := h.application.CreateAccount.Handle(ctx, app.CreateAccountArg{
 		UserID:      uid,
 		Title:       acc.GetTitle(),
 		Description: acc.GetDescription(),
@@ -101,4 +97,93 @@ func (h *Handler) CreateAccount(ctx context.Context, param *pb.ManyAccounts) (*p
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &pb.IntID{Id: accid}, nil
+}
+
+func (h *Handler) Transfer(ctx context.Context, param *pb.TransactionParam) (*pb.Transaction, error) {
+	if param.From == nil || param.To == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid transaction param: from and to must be provided")
+	}
+	tid := param.GetActor().GetId()
+	actorUUID, err := uuid.Parse(tid)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid actor id: expected uuid")
+	}
+	t, err := h.application.Transfer.Handle(ctx, app.TransferArg{
+		FromAccountID: param.GetFrom(),
+		ToAccountID:   param.GetTo(),
+		Amount:        param.GetAmount(),
+		ActorID:       actorUUID,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return mapTxToPb(t), nil
+}
+
+func (h *Handler) Deposit(ctx context.Context, param *pb.TransactionParam) (*pb.Transaction, error) {
+	if param.To == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid transaction param: to must be provided")
+	}
+	tid := param.GetActor().GetId()
+	actorUUID, err := uuid.Parse(tid)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid actor id: expected uuid")
+	}
+	t, err := h.application.Deposit.Handle(ctx, app.DepositArg{
+		AccountID: param.GetTo(),
+		Amount:    param.GetAmount(),
+		ActorID:   actorUUID,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return mapTxToPb(t), nil
+}
+
+func (h *Handler) Withdraw(ctx context.Context, param *pb.TransactionParam) (*pb.Transaction, error) {
+	if param.From == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid transaction param: from must be provided")
+	}
+	tid := param.GetActor().GetId()
+	actorUUID, err := uuid.Parse(tid)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid actor id: expected uuid")
+	}
+	t, err := h.application.Withdrawal.Handle(ctx, app.WithdrawArg{
+		AccountID: param.GetFrom(),
+		Amount:    param.GetAmount(),
+		ActorID:   actorUUID,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return mapTxToPb(t), nil
+}
+
+func mapAcctToPb(acc *gomoney.Account) *pb.Account {
+	if acc == nil {
+		return nil
+	}
+	return &pb.Account{
+		Id:          acc.Id,
+		Title:       acc.Title,
+		Description: acc.Description,
+		Balance:     acc.Balance,
+		Currency:    pb.Currency(pb.Currency_value[string(acc.Currency)]),
+		IsBlocked:   acc.IsBlocked,
+	}
+}
+
+func mapTxToPb(t *gomoney.Transaction) *pb.Transaction {
+	if t == nil {
+		return nil
+	}
+	return &pb.Transaction{
+		Id:        &pb.StringID{Id: t.ID.String()},
+		Amount:    t.Amount,
+		From:      mapAcctToPb(t.From),
+		To:        mapAcctToPb(t.To),
+		CreatedAt: timestamppb.New(t.Created),
+		Type:      pb.TransactionType(pb.TransactionType_value[t.Type.String()]),
+	}
 }
