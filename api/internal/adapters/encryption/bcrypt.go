@@ -1,10 +1,13 @@
 package encryption
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/lordvidex/gomoney/api/internal/application"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type bcryptPasswordHasherImpl struct{}
 
-func NewBcryptPasswordHasher() PasswordHasher {
+func NewBcryptPasswordHasher() application.PasswordHasher {
 	return &bcryptPasswordHasherImpl{}
 }
 
