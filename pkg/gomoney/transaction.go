@@ -80,3 +80,8 @@ func (t *Transaction) Validate() error {
 	}
 	return nil
 }
+
+type TransactionSummary struct {
+	Transactions []Transaction
+	Account      *Account
+}

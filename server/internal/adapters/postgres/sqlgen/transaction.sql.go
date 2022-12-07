@@ -15,7 +15,9 @@ import (
 )
 
 const deposit = `-- name: Deposit :exec
-UPDATE "accounts" SET balance = balance + $1 WHERE id = $2
+UPDATE "accounts"
+SET balance = balance + $1
+WHERE id = $2
 `
 
 type DepositParams struct {
@@ -29,25 +31,73 @@ func (q *Queries) Deposit(ctx context.Context, arg DepositParams) error {
 }
 
 const getTransactions = `-- name: GetTransactions :many
-SELECT id, amount, type, created_at, from_account_id, to_account_id from "transactions" WHERE from_account_id=$1 OR to_account_id=$1 ORDER BY created_at DESC
+SELECT tx.id, tx.amount, tx.type, tx.created_at,
+       fr.id AS from_id, fr.title AS from_title, fr.description AS from_description, fr.balance AS from_balance, fr.currency AS from_currency, fr.is_blocked AS from_is_blocked, fr.user_id AS from_user_id,
+       t.id AS to_id, t.title AS to_title, t.description AS to_description, t.balance AS to_balance, t.currency AS to_currency, t.is_blocked AS to_is_blocked, t.user_id AS to_user_id
+from (SELECT id, amount, type, created_at, from_account_id, to_account_id
+      from "transactions"
+      WHERE from_account_id = $1
+         OR to_account_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2) tx
+         LEFT JOIN "accounts" fr ON tx.from_account_id = fr.id
+         LEFT JOIN "accounts" t ON tx.to_account_id = t.id
 `
 
-func (q *Queries) GetTransactions(ctx context.Context, fromAccountID sql.NullInt64) ([]*Transaction, error) {
-	rows, err := q.db.Query(ctx, getTransactions, fromAccountID)
+type GetTransactionsParams struct {
+	FromAccountID sql.NullInt64
+	Limit         sql.NullInt32
+}
+
+type GetTransactionsRow struct {
+	ID              uuid.UUID
+	Amount          pgtype.Numeric
+	Type            TransactionType
+	CreatedAt       time.Time
+	FromID          sql.NullInt64
+	FromTitle       sql.NullString
+	FromDescription sql.NullString
+	FromBalance     pgtype.Numeric
+	FromCurrency    NullCurrency
+	FromIsBlocked   sql.NullBool
+	FromUserID      uuid.NullUUID
+	ToID            sql.NullInt64
+	ToTitle         sql.NullString
+	ToDescription   sql.NullString
+	ToBalance       pgtype.Numeric
+	ToCurrency      NullCurrency
+	ToIsBlocked     sql.NullBool
+	ToUserID        uuid.NullUUID
+}
+
+func (q *Queries) GetTransactions(ctx context.Context, arg GetTransactionsParams) ([]*GetTransactionsRow, error) {
+	rows, err := q.db.Query(ctx, getTransactions, arg.FromAccountID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []*Transaction{}
+	items := []*GetTransactionsRow{}
 	for rows.Next() {
-		var i Transaction
+		var i GetTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Amount,
 			&i.Type,
 			&i.CreatedAt,
-			&i.FromAccountID,
-			&i.ToAccountID,
+			&i.FromID,
+			&i.FromTitle,
+			&i.FromDescription,
+			&i.FromBalance,
+			&i.FromCurrency,
+			&i.FromIsBlocked,
+			&i.FromUserID,
+			&i.ToID,
+			&i.ToTitle,
+			&i.ToDescription,
+			&i.ToBalance,
+			&i.ToCurrency,
+			&i.ToIsBlocked,
+			&i.ToUserID,
 		); err != nil {
 			return nil, err
 		}
@@ -60,7 +110,8 @@ func (q *Queries) GetTransactions(ctx context.Context, fromAccountID sql.NullInt
 }
 
 const saveTransaction = `-- name: SaveTransaction :exec
-INSERT INTO "transactions" (id, created_at, from_account_id, to_account_id, amount, type) VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO "transactions" (id, created_at, from_account_id, to_account_id, amount, type)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type SaveTransactionParams struct {
@@ -85,7 +136,9 @@ func (q *Queries) SaveTransaction(ctx context.Context, arg SaveTransactionParams
 }
 
 const withdraw = `-- name: Withdraw :exec
-UPDATE "accounts" SET balance = balance - $1 WHERE id = $2
+UPDATE "accounts"
+SET balance = balance - $1
+WHERE id = $2
 `
 
 type WithdrawParams struct {

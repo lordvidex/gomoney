@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/lordvidex/gomoney/pkg/config"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
+	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
 	app "github.com/lordvidex/gomoney/server/internal/application"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -154,4 +157,49 @@ func cleanUp(c *config.Config) {
 		return
 	}
 	_ = m.Down()
+}
+
+func Test_convertTransaction(t *testing.T) {
+	type args struct {
+		curr func() *sqlgen.Transaction
+	}
+
+	id := uuid.New()
+	tm := time.Now()
+	tests := []struct {
+		name string
+		args args
+		want gomoney.Transaction
+	}{
+		{"convert", args{
+			func() *sqlgen.Transaction {
+				num := pgtype.Numeric{}
+				_ = num.Set(100)
+				return &sqlgen.Transaction{
+					ID:            id,
+					Amount:        num,
+					Type:          sqlgen.TransactionTypeTransfer,
+					CreatedAt:     tm,
+					FromAccountID: sql.NullInt64{Int64: 1, Valid: true},
+					ToAccountID:   sql.NullInt64{Int64: 2, Valid: true},
+				}
+			},
+		},
+			gomoney.Transaction{
+				ID:      id,
+				Amount:  100,
+				From:    &gomoney.Account{Id: 1},
+				To:      &gomoney.Account{Id: 2},
+				Created: tm,
+				Type:    gomoney.Transfer,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := convertTransactionRow(tt.args.curr()); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("convertTransaction() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

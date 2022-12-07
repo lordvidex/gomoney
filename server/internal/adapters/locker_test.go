@@ -2,10 +2,33 @@ package adapters
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 )
 
+func TestConcurrentLocker_Lock(t *testing.T) {
+	l := NewLocker(context.TODO(), time.Second)
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func(x int) {
+			defer wg.Done()
+			unlock := l.Lock("x", "y", "z")
+			time.Sleep(time.Second * 2) // let the other goroutines try to lock the same keys
+			defer unlock()
+		}(i)
+	}
+
+	time.Sleep(time.Second * 2) // wait for the cleanup to run
+	for _, key := range []any{"x", "y", "z"} {
+		_, ok := l.mx.Load(key)
+		if !ok {
+			t.Errorf("lock not found")
+		}
+	}
+	wg.Wait()
+}
 func TestLocker_Lock(t *testing.T) {
 	type args struct {
 		x    any

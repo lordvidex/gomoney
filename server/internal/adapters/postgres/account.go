@@ -32,13 +32,26 @@ func (r *accountRepo) GetAccountsForUser(ctx context.Context, userID uuid.UUID) 
 	return convertAccounts(accs), nil
 }
 
-func convertAccounts(sl []*sqlgen.Account) []gomoney.Account {
-	x := make([]gomoney.Account, len(sl))
-	for i := 0; i < len(x); i++ {
-		curr := sl[i]
-		x[i] = convertAccount(curr)
+func (r *accountRepo) GetLastNTransactions(ctx context.Context, accountID int64, n int) ([]gomoney.Transaction, error) {
+	tx, err := r.Queries.GetTransactions(ctx, sqlgen.GetTransactionsParams{
+		FromAccountID: sql.NullInt64{Int64: accountID, Valid: true},
+		Limit:         sql.NullInt32{Int32: int32(n), Valid: true},
+	})
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
 	}
-	return x
+	return convertTransactions(tx), nil
+}
+
+func (r *accountRepo) GetAllTransactions(ctx context.Context, accountID int64) ([]gomoney.Transaction, error) {
+	tx, err := r.Queries.GetTransactions(ctx, sqlgen.GetTransactionsParams{
+		FromAccountID: sql.NullInt64{Int64: accountID, Valid: true},
+		Limit:         sql.NullInt32{Valid: false},
+	})
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+	return convertTransactions(tx), nil
 }
 
 func (r *accountRepo) CreateAccount(ctx context.Context, arg app.CreateAccountArg) (int64, error) {
@@ -106,7 +119,7 @@ func (r *accountRepo) Transfer(ctx context.Context, transaction *gomoney.Transac
 			return sql.NullInt64{}
 		}(),
 		Amount: mustNumeric(transaction.Amount),
-		Type:   mapTxType(transaction.Type),
+		Type:   mapTxToDB(transaction.Type),
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to save transaction record")
@@ -124,6 +137,15 @@ func (r *accountRepo) GetAccountByID(ctx context.Context, accountID int64) (*gom
 	}
 	conv := convertAccount(acc)
 	return &conv, nil
+}
+
+func convertAccounts(sl []*sqlgen.Account) []gomoney.Account {
+	x := make([]gomoney.Account, len(sl))
+	for i := 0; i < len(x); i++ {
+		curr := sl[i]
+		x[i] = convertAccount(curr)
+	}
+	return x
 }
 
 // convertAccount converts database account to domain account
@@ -146,6 +168,52 @@ func convertAccount(curr *sqlgen.Account) gomoney.Account {
 	return x
 }
 
+func convertTransactions(sl []*sqlgen.GetTransactionsRow) []gomoney.Transaction {
+	x := make([]gomoney.Transaction, len(sl))
+	for i := 0; i < len(x); i++ {
+		curr := sl[i]
+		x[i] = convertTransactionRow(curr)
+	}
+	return x
+}
+
+func convertTransactionRow(curr *sqlgen.GetTransactionsRow) gomoney.Transaction {
+	var from, to *gomoney.Account
+	if curr.FromID.Valid {
+		temp := convertAccount(&sqlgen.Account{
+			ID:          curr.FromID.Int64,
+			Title:       curr.FromTitle.String,
+			Description: curr.FromDescription,
+			Balance:     curr.FromBalance,
+			Currency:    curr.FromCurrency.Currency,
+			IsBlocked:   curr.FromIsBlocked,
+			UserID:      curr.FromUserID,
+		})
+		from = &temp
+	}
+	if curr.ToID.Valid {
+		temp := convertAccount(&sqlgen.Account{
+			ID:          curr.ToID.Int64,
+			Title:       curr.ToTitle.String,
+			Description: curr.ToDescription,
+			Balance:     curr.ToBalance,
+			Currency:    curr.ToCurrency.Currency,
+			IsBlocked:   curr.ToIsBlocked,
+			UserID:      curr.ToUserID,
+		})
+		to = &temp
+	}
+	tx := gomoney.Transaction{
+		ID:      curr.ID,
+		Created: curr.CreatedAt,
+		From:    from,
+		To:      to,
+		Type:    mapDBToTx(curr.Type),
+	}
+	_ = curr.Amount.AssignTo(&(tx.Amount))
+	return tx
+}
+
 // mustInt64 converts int64 to sql.NullInt64
 func mustInt64(s int64) sql.NullInt64 {
 	t := sql.NullInt64{}
@@ -160,8 +228,8 @@ func mustNumeric(s any) pgtype.Numeric {
 	return t
 }
 
-// mapTxType maps transaction type from domain to database
-func mapTxType(t gomoney.TransactionType) sqlgen.TransactionType {
+// mapTxToDB maps transaction type from domain to database
+func mapTxToDB(t gomoney.TransactionType) sqlgen.TransactionType {
 	switch t {
 	case gomoney.Deposit:
 		return sqlgen.TransactionTypeDeposit
@@ -171,4 +239,16 @@ func mapTxType(t gomoney.TransactionType) sqlgen.TransactionType {
 		return sqlgen.TransactionTypeTransfer
 	}
 	return ""
+}
+
+func mapDBToTx(t sqlgen.TransactionType) gomoney.TransactionType {
+	switch t {
+	case sqlgen.TransactionTypeDeposit:
+		return gomoney.Deposit
+	case sqlgen.TransactionTypeWithdrawal:
+		return gomoney.Withdrawal
+	case sqlgen.TransactionTypeTransfer:
+		return gomoney.Transfer
+	}
+	return -1
 }

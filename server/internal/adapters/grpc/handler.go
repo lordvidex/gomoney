@@ -160,6 +160,66 @@ func (h *Handler) Withdraw(ctx context.Context, param *pb.TransactionParam) (*pb
 	return mapTxToPb(t), nil
 }
 
+func (h *Handler) GetTransactionSummary(ctx context.Context, param *pb.StringID) (*pb.ManyAccountTransactions, error) {
+	id := param.GetId()
+	if id == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid transaction id: expected uuid")
+	}
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid transaction id: expected uuid")
+	}
+	summaries, err := h.application.GetTransactionSummaryForUser.Handle(ctx, app.TransactionSummaryArg{ActorID: uid})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	summary := make([]*pb.AccountTransactions, len(summaries))
+	for i, s := range summaries {
+		summary[i] = mapSummaryToPb(s)
+	}
+	return &pb.ManyAccountTransactions{
+		Transactions: summary,
+	}, nil
+
+}
+func (h *Handler) GetTransactions(ctx context.Context, param *pb.UserWithAccount) (*pb.AccountTransactions, error) {
+	userid := param.GetUser().GetId()
+	if userid == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id: expected uuid")
+	}
+	uid, err := uuid.Parse(userid)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id: expected uuid")
+	}
+	accid := param.GetAccount().GetId()
+	tx, err := h.application.GetTransactionsInAccount.Handle(ctx, app.TransactionsArg{
+		AccountID: accid,
+		ActorID:   uid,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	result := make([]*pb.Transaction, len(tx))
+	for i, t := range tx {
+		result[i] = mapTxToPb(&t)
+	}
+	return &pb.AccountTransactions{
+		Transactions: result,
+		Account:      param.GetAccount(),
+	}, nil
+}
+
+func mapSummaryToPb(s gomoney.TransactionSummary) *pb.AccountTransactions {
+	tx := make([]*pb.Transaction, len(s.Transactions))
+	for i, t := range s.Transactions {
+		tx[i] = mapTxToPb(&t)
+	}
+	return &pb.AccountTransactions{
+		Account:      &pb.IntID{Id: s.Account.Id},
+		Transactions: tx,
+	}
+}
+
 func mapAcctToPb(acc *gomoney.Account) *pb.Account {
 	if acc == nil {
 		return nil
@@ -184,6 +244,18 @@ func mapTxToPb(t *gomoney.Transaction) *pb.Transaction {
 		From:      mapAcctToPb(t.From),
 		To:        mapAcctToPb(t.To),
 		CreatedAt: timestamppb.New(t.Created),
-		Type:      pb.TransactionType(pb.TransactionType_value[t.Type.String()]),
+		Type:      mapTxTypeToPb(t.Type),
 	}
+}
+
+func mapTxTypeToPb(t gomoney.TransactionType) pb.TransactionType {
+	switch t {
+	case gomoney.Transfer:
+		return pb.TransactionType_TRANSFER
+	case gomoney.Deposit:
+		return pb.TransactionType_DEPOSIT
+	case gomoney.Withdrawal:
+		return pb.TransactionType_WITHDRAWAL
+	}
+	return -1
 }

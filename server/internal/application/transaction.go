@@ -7,6 +7,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	SummariesPerAccount = 10
+)
+
 var (
 	ErrSameAccount     = errors.New("cannot transfer to the same account")
 	ErrAccountNotFound = errors.New("account not found")
@@ -177,4 +181,73 @@ func (w *withdrawImpl) Handle(ctx context.Context, arg WithdrawArg) (*gomoney.Tr
 
 func NewWithdrawCommand(repo AccountRepository, l TxLocker) WithdrawCommand {
 	return &withdrawImpl{repo, l}
+}
+
+type TransactionSummaryArg struct {
+	ActorID uuid.UUID
+}
+
+type TransactionSummaryQuery interface {
+	Handle(ctx context.Context, arg TransactionSummaryArg) ([]gomoney.TransactionSummary, error)
+}
+
+type transactionSummaryImpl struct {
+	repo AccountRepository
+}
+
+func (t *transactionSummaryImpl) Handle(ctx context.Context, arg TransactionSummaryArg) ([]gomoney.TransactionSummary, error) {
+	accs, err := t.repo.GetAccountsForUser(ctx, arg.ActorID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get accounts")
+	}
+	txs := make([]gomoney.TransactionSummary, len(accs))
+
+	// an alternative approach (faster but messier) is to get all transactions for the user sorted by date
+	// and then filter them by account INSTEAD of repetitive repo calls.
+
+	for i, acc := range accs {
+		// get the transactions for the account
+		accTxs, err := t.repo.GetLastNTransactions(ctx, acc.Id, SummariesPerAccount)
+		if err != nil {
+			return nil, err
+		}
+		txs[i] = gomoney.TransactionSummary{
+			Account:      &acc,
+			Transactions: accTxs,
+		}
+	}
+	return txs, nil
+}
+
+func NewTransactionSummaryQuery(repo AccountRepository) TransactionSummaryQuery {
+	return &transactionSummaryImpl{repo}
+}
+
+type TransactionsArg struct {
+	AccountID int64
+	ActorID   uuid.UUID
+}
+
+type TransactionsQuery interface {
+	Handle(ctx context.Context, arg TransactionsArg) ([]gomoney.Transaction, error)
+}
+
+type transactionsImpl struct {
+	repo AccountRepository
+}
+
+func (t *transactionsImpl) Handle(ctx context.Context, arg TransactionsArg) ([]gomoney.Transaction, error) {
+	acc, err := t.repo.GetAccountByID(ctx, arg.AccountID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get account")
+	}
+	// check that the actor owns the account
+	if acc.OwnerID != arg.ActorID {
+		return nil, ErrOwnerAction
+	}
+	return t.repo.GetAllTransactions(ctx, acc.Id)
+}
+
+func NewTransactionsQuery(repo AccountRepository) TransactionsQuery {
+	return &transactionsImpl{repo}
 }

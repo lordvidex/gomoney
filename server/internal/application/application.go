@@ -4,8 +4,10 @@ package application
 func New(ur UserRepository, ar AccountRepository, l TxLocker) *UseCases {
 	return &UseCases{
 		Query: Query{
-			GetUser:            NewGetUserQuery(ur),
-			GetAccountsForUser: NewGetUserAccountsQuery(ar),
+			GetUser:                      NewGetUserQuery(ur),
+			GetAccountsForUser:           NewGetUserAccountsQuery(ar),
+			GetTransactionSummaryForUser: NewTransactionSummaryQuery(ar),
+			GetTransactionsInAccount:     NewTransactionsQuery(ar),
 		},
 		Command: Command{
 			CreateUser:    NewCreateUserCommand(ur),
@@ -23,8 +25,10 @@ type UseCases struct {
 }
 
 type Query struct {
-	GetUser            GetUserQuery
-	GetAccountsForUser GetUserAccountsQuery
+	GetUser                      GetUserQuery
+	GetAccountsForUser           GetUserAccountsQuery
+	GetTransactionSummaryForUser TransactionSummaryQuery
+	GetTransactionsInAccount     TransactionsQuery
 }
 
 type Command struct {
