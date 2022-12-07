@@ -36,5 +36,6 @@ func runMigrations(c *config.Config) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to run migrations")
 	}
+	defer m.Close()
 	return m.Up()
 }

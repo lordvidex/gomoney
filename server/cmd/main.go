@@ -5,6 +5,8 @@ import (
 	"github.com/lordvidex/gomoney/server/internal/adapters"
 	"log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/lordvidex/gomoney/pkg/config"
@@ -16,6 +18,12 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+func init() {
+	log.Printf("pprof listening on port 8081")
+	go func() {
+		_ = http.ListenAndServe(":8081", nil)
+	}()
+}
 func main() {
 	appCtx, cancel := context.WithCancel(context.TODO())
 	defer cancel()

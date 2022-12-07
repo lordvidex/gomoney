@@ -19,6 +19,9 @@ type AccountRepository interface {
 	Transfer(ctx context.Context, tx *gomoney.Transaction) error
 	GetAccountsForUser(ctx context.Context, userID uuid.UUID) ([]gomoney.Account, error)
 	GetAccountByID(ctx context.Context, accountID int64) (*gomoney.Account, error)
+
+	GetLastNTransactions(ctx context.Context, accountID int64, n int) ([]gomoney.Transaction, error)
+	GetAllTransactions(ctx context.Context, accountID int64) ([]gomoney.Transaction, error)
 }
 
 // TxLocker is a transaction lock interface that locks `keys`
