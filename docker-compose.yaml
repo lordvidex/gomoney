@@ -32,6 +32,7 @@ services:
         condition: service_healthy
     ports:
       - "8002:8080"
+      - "8003:8081"
         
   
   api:

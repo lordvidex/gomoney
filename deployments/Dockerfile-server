@@ -5,6 +5,7 @@ RUN go mod download
 COPY . .
 RUN go install github.com/cespare/reflex@latest
 EXPOSE 8080
+EXPOSE 8081
 CMD reflex -sr '\.go$' go run ./server/cmd/main.go
 
 FROM golang:alpine AS builder
