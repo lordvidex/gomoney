@@ -18,6 +18,24 @@ services:
       timeout: 30s
       retries: 5
 
+  redis:
+    container_name: "gomoney-redis"
+    image: redis:latest
+    restart: always
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - ./db.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
   server-dev:
     container_name: "gomoney-grpc-server"
     volumes:
@@ -33,19 +51,22 @@ services:
     ports:
       - "8002:8080"
       - "8003:8081"
-        
-  
+
   api:
     container_name: "gomoney-api-server"
     volumes:
       - ./api:/go/src/github.com/lordvidex/gomoney-api/api
     environment:
       - GRPC_SERVER=server-dev:8080
+      - REDIS_URL=${REDIS_URL}
     build: 
       dockerfile: deployments/Dockerfile-api
       target: development
     depends_on:
-      - server-dev
+      server-dev:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8080"
 
@@ -61,3 +82,4 @@ services:
 
 volumes:
   db:
+  redis:
