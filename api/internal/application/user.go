@@ -19,27 +19,31 @@ type CreateUserCommand interface {
 }
 
 type createUserCommandImpl struct {
+	repo UserRepository
 	srv  Service
-	repo Repository
 	ph   PasswordHasher
 }
 
-func NewCreateUserCommand(srv Service, repo Repository, ph PasswordHasher) CreateUserCommand {
-	return &createUserCommandImpl{srv, repo, ph}
+func NewCreateUserCommand(repo UserRepository, srv Service, ph PasswordHasher) CreateUserCommand {
+	return &createUserCommandImpl{repo, srv, ph}
 }
 
 func (c *createUserCommandImpl) Handle(ctx context.Context, p CreateUserParam) (string, error) {
+	// create password hash
 	hashPassword, err := c.ph.CreatePasswordHash(p.Password)
 	if err != nil {
 		return "", errors.Wrap(err, "error hashing password")
 	}
-
 	p.Password = hashPassword
+
+	// Create user in database with grpc call
 	userID, err := c.srv.CreateUser(ctx, p)
 	if err != nil {
 		return "", err
 	}
 	userUUID, err := uuid.Parse(userID)
+
+	// Save user to user repository (redis)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +57,7 @@ func (c *createUserCommandImpl) Handle(ctx context.Context, p CreateUserParam) (
 	}
 	err = c.repo.SaveUser(ctx, &apiUser)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to save created user to database")
+		return "", errors.Wrap(err, "failed to save created user to cache layer")
 	}
 	return userID, nil
 }

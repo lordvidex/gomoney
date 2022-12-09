@@ -6,6 +6,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ----------- User login Command ------------
+
 type LoginParam struct {
 	Phone    string
 	Password string
@@ -16,47 +18,54 @@ type LoginCommand interface {
 }
 
 type loginCommandImpl struct {
-	repo Repository
-	tok  TokenHelper
-	srv  Service
-	ph   PasswordHasher
+	ur  UserRepository
+	th  TokenHelper
+	srv Service
+	ph  PasswordHasher
 }
 
-func NewLoginCommand(repo Repository, tok TokenHelper, srv Service, ph PasswordHasher) LoginCommand {
-	return &loginCommandImpl{repo, tok, srv, ph}
+func NewLoginCommand(ur UserRepository, th TokenHelper, srv Service, ph PasswordHasher) LoginCommand {
+	return &loginCommandImpl{ur, th, srv, ph}
 }
 
 func (l *loginCommandImpl) Handle(ctx context.Context, param LoginParam) (*core.ApiUserWithToken, error) {
-	user, err := l.repo.GetUserFromPhone(ctx, param.Phone)
+	user, err := l.ur.GetUserFromPhone(ctx, param.Phone)
 	if err != nil {
 		return nil, err
 	}
 	if err = l.ph.CheckPasswordHash(user.Password, param.Password); err != nil {
 		return nil, ErrInvalidLogin
 	}
-	// get the user from the service to confirm
+
+	// Get the user from the service to confirm
 	user, err = l.srv.GetUserByPhone(ctx, user.Phone)
 	if err != nil {
 		return nil, ErrUserDeleted
 	}
-	token, err := l.tok.CreateToken(core.Payload{Phone: user.Phone})
+
+	// Create user token
+	token, err := l.th.CreateToken(core.Payload{Phone: user.Phone})
 	if err != nil {
 		return nil, ErrAssigningToken
 	}
+
 	return &core.ApiUserWithToken{ApiUser: user, Token: token}, nil
 }
+
+// ----------- User login Command ------------
 
 type APIUserQuery interface {
 	Handle(context.Context, string) (*core.ApiUser, error)
 }
 
 type apiUserQueryImpl struct {
-	repo Repository
+	repo UserRepository
+	ser  Service
 	tok  TokenHelper
 }
 
-func NewAPIUserQuery(repo Repository, t TokenHelper) APIUserQuery {
-	return &apiUserQueryImpl{repo, t}
+func NewAPIUserQuery(repo UserRepository, ser Service, t TokenHelper) APIUserQuery {
+	return &apiUserQueryImpl{repo, ser, t}
 }
 
 func (a *apiUserQueryImpl) Handle(ctx context.Context, token string) (*core.ApiUser, error) {
