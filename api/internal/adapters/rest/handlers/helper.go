@@ -35,8 +35,8 @@ func parseUri(ctx *fiber.Ctx, obj interface{}) error {
 	return nil
 }
 
-func parseDatabaseInternalError(ctx *fiber.Ctx, err error) {
-	_ = ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+func setCtxBodyError(ctx *fiber.Ctx, err error) error {
+	return ctx.JSON(fiber.Map{
 		"error": err.Error(),
 	})
 }

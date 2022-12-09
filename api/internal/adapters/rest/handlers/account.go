@@ -6,32 +6,13 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-func GetAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
-	// get the user from the context
-	u, err := userFromCtx(ctx)
-	if err != nil {
-		return err
-	}
-
-	// get account from repository
-	accounts, err := uc.ViewAccounts.Handle(ctx.UserContext(), application.ViewAccountsParam{
-		UserID: u.ID,
-	})
-	if err != nil {
-		parseDatabaseInternalError(ctx, err)
-		return err
-	}
-	
-	return ctx.Status(fiber.StatusOK).JSON(accounts)
-}
-
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	// get the user from the context
 	u, err := userFromCtx(ctx)
 	if err != nil {
 		return err
 	}
-	accounts, err := uc.ViewAccounts.Handle(ctx.UserContext(), application.ViewAccountsParam{
+	accounts, err := uc.GetAccounts.Handle(ctx.UserContext(), application.GetAccountsParam{
 		UserID: u.ID,
 	})
 	if err != nil {
@@ -43,9 +24,9 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 }
 
 type createAccountReq struct {
-	Title       string
-	Description string
-	Currency    gomoney.Currency
+	Title       string           `json:"title" validate:"required"`
+	Description string           `json:"description" validate:"required"`
+	Currency    gomoney.Currency `json:"currency" validate:"required"`
 }
 
 func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -55,11 +36,17 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return err
 	}
 
+	// parse the request body
 	var req createAccountReq
-	err = parseBody(ctx, &req)
-	if err != nil {
+	if err = parseBody(ctx, &req); err != nil {
 		return err
 	}
+	if req.Currency.IsValid() == false {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid currency",
+		})
+	}
+
 	id, err := uc.CreateAccount.Handle(ctx.UserContext(), application.CreateAccountParam{
 		UserID: u.ID,
 		Account: gomoney.Account{

@@ -1,19 +1,20 @@
 package application
 
-func New(repo Repository, maker TokenHelper, service Service, hasher PasswordHasher) *Usecases {
+func New(repo UserRepository, maker TokenHelper, service Service, hasher PasswordHasher) *Usecases {
 	return &Usecases{
 		Query: Query{
-			GetAPIUser:           NewAPIUserQuery(repo, maker),
-			ViewAccounts:         NewViewAccountsQuery(service),
-			ViewAccount:          NewViewAccountQuery(service),
-			ViewAccountTransfers: NewViewAccountTransfersQuery(service, repo),
-			ViewTransfers:        NewViewTransfersQuery(service, repo),
+			GetAPIUser:             NewAPIUserQuery(repo, service, maker),
+			GetAccounts:            NewGetAccountsQuery(service),
+			GetTransactionsSummary: NewGetTransactionsSummaryQuery(service),
+			GetAccountTransactions: NewGetTransactionsQuery(service),
 		},
 		Command: Command{
-			CreateUser:     NewCreateUserCommand(service, repo, hasher),
-			Login:          NewLoginCommand(repo, maker, service, hasher),
-			CreateAccount:  NewCreateAccountCommand(service),
-			CreateTransfer: NewCreateTransferCommand(service, repo),
+			Login:         NewLoginCommand(repo, maker, service, hasher),
+			CreateUser:    NewCreateUserCommand(repo, service, hasher),
+			CreateAccount: NewCreateAccountCommand(service),
+			Transfer:      NewTransferCommand(service),
+			Deposit:       NewDepositCommand(service),
+			Withdraw:      NewWithdrawCommand(service),
 		},
 	}
 }
@@ -24,16 +25,17 @@ type Usecases struct {
 }
 
 type Query struct {
-	GetAPIUser           APIUserQuery
-	ViewAccount          ViewAccountQuery
-	ViewAccounts         ViewAccountsQuery
-	ViewTransfers        ViewTransfersQuery
-	ViewAccountTransfers ViewAccountTransfersQuery
+	GetAPIUser             APIUserQuery
+	GetAccounts            GetAccountsQuery
+	GetTransactionsSummary GetTransactionSummaryQuery
+	GetAccountTransactions GetTransactionQuery
 }
 
 type Command struct {
-	CreateUser     CreateUserCommand
-	Login          LoginCommand
-	CreateAccount  CreateAccountCommand
-	CreateTransfer CreateTransferCommand
+	Login         LoginCommand
+	CreateUser    CreateUserCommand
+	CreateAccount CreateAccountCommand
+	Transfer      TransferCommand
+	Deposit       DepositCommand
+	Withdraw      WithdrawCommand
 }

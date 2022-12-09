@@ -10,29 +10,30 @@ type loginUserReq struct {
 	Password string `json:"password"`
 }
 
-type createUserReq struct {
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-}
-
 func Login(uc *application.Usecases, ctx *fiber.Ctx) error {
-	// parse dto
+	// parse request body
 	var req loginUserReq
 	if err := parseBody(ctx, &req); err != nil {
 		return err
 	}
+
 	// call app function
 	u, err := uc.Login.Handle(ctx.UserContext(),
 		application.LoginParam{Phone: req.Phone, Password: req.Password})
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return setCtxBodyError(ctx, err)
 	}
+
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"access_token": u.Token,
+		"user":  u.User,
+		"token": u.Token,
 	})
+}
+
+type createUserReq struct {
+	Phone    string `json:"phone" validate:"required,number"`
+	Password string `json:"password" validate:"required,min=8"`
+	Name     string `json:"name" validate:"required,alpha"`
 }
 
 func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -46,12 +47,10 @@ func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
 		Phone:    req.Phone,
 		Password: req.Password,
 	})
-
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return setCtxBodyError(ctx, err)
 	}
+
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User successfully created",
 	})
