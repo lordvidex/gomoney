@@ -119,6 +119,18 @@ func (s *service) GetAccountTransfers(ctx context.Context, accountID int64, user
 	return txs, nil
 }
 
+func (s *service) DeleteAccount(ctx context.Context, userID string, accountID int64) error {
+	_, err := s.acl.DeleteAccount(ctx, &grpc3.UserWithAccount{
+		User: &grpc3.StringID{
+			Id: userID,
+		},
+		Account: &grpc3.IntID{
+			Id: accountID,
+		},
+	})
+	return err
+}
+
 func (s *service) GetTransfers(ctx context.Context, userID string) ([]gomoney.Transaction, error) {
 	tx, err := s.tcl.GetTransactions(ctx, &grpc3.UserWithAccount{
 		User: &grpc3.StringID{

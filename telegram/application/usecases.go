@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -29,42 +30,63 @@ func (u *UseCases) CreateUser(ctx context.Context, param CreateUserParam) (id st
 	if err != nil {
 		return "", err
 	}
-	u.c.SetUserIDWithChatID(param.ChatID, userID)
+	u.c.SetUserWithChatID(ctx, param.ChatID, gomoney.User{
+		ID:    uuid.MustParse(userID),
+		Name:  param.Name,
+		Phone: param.Phone,
+	})
 	return userID, nil
 }
 
-func (u *UseCases) GetUserByPhone(ctx context.Context, phone string) (*gomoney.User, error) {
-	return u.srv.GetUserByPhone(ctx, phone)
+func (u *UseCases) GetUserByPhone(ctx context.Context, phone string, chatID string) (*gomoney.User, error) {
+	user, err := u.srv.GetUserByPhone(ctx, phone)
+	if err != nil {
+		return nil, err
+	}
+	err = u.c.SetUserWithChatID(ctx, chatID, *user)
+	if err != nil {
+		log.Println(err)
+	}
+	return user, nil
 }
 
 func (u *UseCases) GetUserByChatID(ctx context.Context, chatID string) (*gomoney.User, error) {
-	userID, ok := u.c.GetUserIDFromChatID(chatID)
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
 	if !ok {
 		return nil, errors.Wrap(gomoney.ErrNotFound, "telegram user")
 	}
-	return u.srv.GetUserByPhone(ctx, userID)
+
+	return u.srv.GetUserByPhone(ctx, user.Phone)
 }
 
 func (u *UseCases) GetAccounts(ctx context.Context, chatID string) ([]gomoney.Account, error) {
-	userID, ok := u.c.GetUserIDFromChatID(chatID)
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
 	if !ok {
 		return nil, errors.Wrap(gomoney.ErrNotFound, "telegram user")
 	}
-	return u.srv.GetAccounts(ctx, userID)
+	return u.srv.GetAccounts(ctx, user.ID.String())
 }
 
 func (u *UseCases) CreateAccount(ctx context.Context, chatID string, account *gomoney.Account) (int64, error) {
-	userID, ok := u.c.GetUserIDFromChatID(chatID)
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
 	if !ok {
 		return 0, errors.Wrap(gomoney.ErrNotFound, "telegram user")
 	}
-	return u.srv.CreateAccount(ctx, userID, account)
+	return u.srv.CreateAccount(ctx, user.ID.String(), account)
+}
+
+func (u *UseCases) DeleteAccount(ctx context.Context, accountID int64, chatID string) error {
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
+	if !ok {
+		return errors.Wrap(gomoney.ErrNotFound, "telegram user")
+	}
+	return u.srv.DeleteAccount(ctx, user.ID.String(), accountID)
 }
 
 func (u *UseCases) GetAccountTransfers(ctx context.Context, accountID int64, chatID string) ([]gomoney.Transaction, error) {
-	userID, ok := u.c.GetUserIDFromChatID(chatID)
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
 	if !ok {
 		return nil, errors.Wrap(gomoney.ErrNotFound, "telegram user")
 	}
-	return u.srv.GetAccountTransfers(ctx, accountID, uuid.MustParse(userID))
+	return u.srv.GetAccountTransfers(ctx, accountID, user.ID)
 }

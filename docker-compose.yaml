@@ -18,7 +18,7 @@ services:
       timeout: 30s
       retries: 5
 
-  redis:
+  redis-db:
     container_name: "gomoney-redis"
     image: redis:latest
     restart: always
@@ -39,7 +39,7 @@ services:
   server-dev:
     container_name: "gomoney-grpc-server"
     volumes:
-      - ./server:/go/src/github.com/lordvidex/gomoney/server
+      - .:/go/src/github.com/lordvidex/gomoney
     environment:
       - DATABASE_URL=${DATABASE_URL}
     build:
@@ -55,17 +55,16 @@ services:
   api:
     container_name: "gomoney-api-server"
     volumes:
-      - ./api:/go/src/github.com/lordvidex/gomoney-api/api
+      - .:/go/src/github.com/lordvidex/gomoney-api/
     environment:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     build: 
       dockerfile: deployments/Dockerfile-api
       target: development
     depends_on:
-      server-dev:
-        condition: service_healthy
-      redis:
+      redis-db:
         condition: service_healthy
     ports:
       - "8000:8080"
@@ -74,11 +73,16 @@ services:
     container_name: "gomoney-telegram-server"
     environment:
       - GRPC_SERVER=server-dev:8080
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - ./telegram:/go/src/github.com/lordvidex/gomoney/telegram
+      - .:/go/src/github.com/lordvidex/gomoney/
     build:
       dockerfile: deployments/Dockerfile-telegram
       target: development
+    depends_on:
+      redis-db:
+        condition: service_healthy
 
 volumes:
   db:

@@ -7,6 +7,7 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/lordvidex/gomoney/pkg/grpc"
@@ -97,6 +98,25 @@ func (h *Handler) CreateAccount(ctx context.Context, param *pb.ManyAccounts) (*p
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &pb.IntID{Id: accid}, nil
+}
+
+func (h *Handler) DeleteAccount(ctx context.Context, param *pb.UserWithAccount) (*emptypb.Empty, error) {
+	id := param.GetUser().GetId()
+	if id == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id")
+	}
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id, please provide uuid")
+	}
+	err = h.application.DeleteAccount.Handle(ctx, app.DeleteAccountArg{
+		ActorID:   uid,
+		AccountID: param.GetAccount().GetId(),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (h *Handler) Transfer(ctx context.Context, param *pb.TransactionParam) (*pb.Transaction, error) {

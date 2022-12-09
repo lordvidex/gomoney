@@ -3,20 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+
 	bt "github.com/SakoDroid/telego"
 	cfg "github.com/SakoDroid/telego/configs"
 	"github.com/lordvidex/gomoney/pkg/config"
 	mgrpc "github.com/lordvidex/gomoney/telegram/adapters/grpc"
+	"github.com/lordvidex/gomoney/telegram/adapters/redis"
 	"github.com/lordvidex/gomoney/telegram/application"
 	"github.com/lordvidex/gomoney/telegram/handler"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 )
 
 const (
-	apiToken = "5817152401:AAGQKxskK9tN_I7oordUsblu1z5hQyzlmfI"
+	apiToken = "5930309571:AAHBedB8K_pOQVa0KQNjA9YP1Mg08AXRzFo"
 )
 
 //gomoneyztest_bot
@@ -33,17 +35,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, _ := context.WithCancel(context.Background())
+	//defer cancel()
 
 	// create grpc service
 	grpconn, err := connectGRPC(c)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	srv := mgrpc.New(grpconn)
-	uc := application.New(srv)
+
+	// create redis cache
+	cache := redis.NewCache(redis.NewConn(ctx, c))
+
+	uc := application.New(srv, cache)
+
 	start(bot, uc, ctx)
 }
 
@@ -53,9 +59,12 @@ func start(bot *bt.Bot, app *application.UseCases, ctx context.Context) {
 	updateChannel := bot.GetUpdateChannel()
 	h := handler.NewBotHandler(bot, app, ctx)
 	h.Register()
-	//Monitores any other update. (Updates that don't contain text message "hi" in a private chat)
+	//Monitors any other update. (Updates that don't contain text message "hi" in a private chat)
 	for {
 		update := <-*updateChannel
+		if update.Message == nil {
+			continue
+		}
 		fmt.Println("The chat id is", update.Message.Chat.Id)
 		_, err := bot.SendMessage(update.Message.Chat.Id, "You said: "+update.Message.Text, "", update.Message.MessageId, false, false)
 		if err != nil {

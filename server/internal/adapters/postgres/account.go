@@ -68,6 +68,10 @@ func (r *accountRepo) CreateAccount(ctx context.Context, arg app.CreateAccountAr
 	return id, nil
 }
 
+func (r *accountRepo) DeleteAccount(ctx context.Context, accountID int64) error {
+	return r.Queries.DeleteAccount(ctx, accountID)
+}
+
 func (r *accountRepo) Transfer(ctx context.Context, transaction *gomoney.Transaction) error {
 	tx, err := r.c.Begin(ctx)
 	if err != nil {

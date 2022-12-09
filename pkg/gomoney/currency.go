@@ -4,6 +4,15 @@ type Currency string
 
 const (
 	USD Currency = "USD"
-	RUB          = "RUB"
-	NGN          = "NGN"
+	RUB Currency = "RUB"
+	NGN Currency = "NGN"
 )
+
+func (c Currency) IsValid() bool {
+	switch c {
+	case NGN, RUB, USD:
+		return true
+	default:
+		return false
+	}
+}
