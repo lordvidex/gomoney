@@ -79,6 +79,9 @@ func (r *accountRepo) Transfer(ctx context.Context, transaction *gomoney.Transac
 	// scan amount
 	amount := pgtype.Numeric{}
 	err = amount.Set(transaction.Amount)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert transaction amount")
+	}
 
 	// withdraw from source account
 	if transaction.From != nil {

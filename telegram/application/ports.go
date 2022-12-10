@@ -19,6 +19,6 @@ type Service interface {
 }
 
 type Cache interface {
-	GetUserWithChatID(id string) (*gomoney.User, bool)
-	SetUserWithChatID(id string, user *gomoney.User)
+	GetUserIDFromChatID(id string) (string, bool)
+	SetUserIDWithChatID(id string, userID string) error
 }

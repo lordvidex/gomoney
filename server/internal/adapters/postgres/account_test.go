@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
@@ -12,9 +16,6 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
 	app "github.com/lordvidex/gomoney/server/internal/application"
-	"reflect"
-	"testing"
-	"time"
 )
 
 // _conn must not be directly accessed but should be called through
@@ -161,7 +162,7 @@ func cleanUp(c *config.Config) {
 
 func Test_convertTransaction(t *testing.T) {
 	type args struct {
-		curr func() *sqlgen.Transaction
+		curr func() *sqlgen.GetTransactionsRow
 	}
 
 	id := uuid.New()
@@ -172,16 +173,16 @@ func Test_convertTransaction(t *testing.T) {
 		want gomoney.Transaction
 	}{
 		{"convert", args{
-			func() *sqlgen.Transaction {
+			func() *sqlgen.GetTransactionsRow {
 				num := pgtype.Numeric{}
 				_ = num.Set(100)
-				return &sqlgen.Transaction{
-					ID:            id,
-					Amount:        num,
-					Type:          sqlgen.TransactionTypeTransfer,
-					CreatedAt:     tm,
-					FromAccountID: sql.NullInt64{Int64: 1, Valid: true},
-					ToAccountID:   sql.NullInt64{Int64: 2, Valid: true},
+				return &sqlgen.GetTransactionsRow{
+					ID:        id,
+					Amount:    num,
+					Type:      sqlgen.TransactionTypeTransfer,
+					CreatedAt: tm,
+					FromID:    sql.NullInt64{Int64: 1, Valid: true},
+					ToID:      sql.NullInt64{Int64: 2, Valid: true},
 				}
 			},
 		},
