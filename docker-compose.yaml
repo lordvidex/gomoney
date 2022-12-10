@@ -51,10 +51,13 @@ services:
 
   telegram:
     container_name: "gomoney-telegram-server"
+    environment:
+      - GRPC_SERVER=server-dev:8080
+    volumes:
+      - ./telegram:/go/src/github.com/lordvidex/gomoney/telegram
     build:
       dockerfile: deployments/Dockerfile-telegram
-    ports:
-      - "8001:8080"
+      target: development
 
 volumes:
   db:
