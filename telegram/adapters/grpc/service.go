@@ -156,10 +156,44 @@ func (s *service) GetTransfers(ctx context.Context, userID string) ([]gomoney.Tr
 	return txs, nil
 }
 
-//func (s *service) CreateTransfer(ctx context.Context, param application.CreateTransferParam) (int64, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
+func (s *service) Deposit(ctx context.Context, param application.TransferParam) error {
+	_, err := s.tcl.Deposit(ctx, &grpc3.TransactionParam{
+		Amount: param.Amount,
+		Actor:  &grpc3.StringID{Id: param.ActorID.String()},
+		From:   nil,
+		To:     &param.To,
+	})
+	if err != nil {
+		return errors.Wrap(err, ErrServiceCall.Error())
+	}
+	return nil
+}
+
+func (s *service) Withdraw(ctx context.Context, param application.TransferParam) error {
+	_, err := s.tcl.Withdraw(ctx, &grpc3.TransactionParam{
+		Amount: param.Amount,
+		Actor:  &grpc3.StringID{Id: param.ActorID.String()},
+		From:   &param.From,
+		To:     nil,
+	})
+	if err != nil {
+		return errors.Wrap(err, ErrServiceCall.Error())
+	}
+	return nil
+}
+
+func (s *service) Transfer(ctx context.Context, param application.TransferParam) error {
+	_, err := s.tcl.Transfer(ctx, &grpc3.TransactionParam{
+		Amount: param.Amount,
+		Actor:  &grpc3.StringID{Id: param.ActorID.String()},
+		From:   &param.From,
+		To:     &param.To,
+	})
+	if err != nil {
+		return errors.Wrap(err, ErrServiceCall.Error())
+	}
+	return nil
+}
 
 func mapAcct(a *grpc3.Account) *gomoney.Account {
 	if a == nil {

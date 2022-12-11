@@ -16,6 +16,13 @@ type CreateUserParam struct {
 	ChatID string
 }
 
+type TransferParam struct {
+	From    int64
+	To      int64
+	Amount  float64
+	ActorID uuid.UUID
+}
+
 type UseCases struct {
 	srv Service
 	c   Cache
@@ -89,4 +96,41 @@ func (u *UseCases) GetAccountTransfers(ctx context.Context, accountID int64, cha
 		return nil, errors.Wrap(gomoney.ErrNotFound, "telegram user")
 	}
 	return u.srv.GetAccountTransfers(ctx, accountID, user.ID)
+}
+
+func (u *UseCases) Deposit(ctx context.Context, amount float64, accountID int64, chatID string) error {
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
+	if !ok {
+		return errors.Wrap(gomoney.ErrNotFound, "telegram user")
+	}
+	param := TransferParam{
+		From:    0,
+		To:      accountID,
+		Amount:  amount,
+		ActorID: user.ID,
+	}
+	return u.srv.Deposit(ctx, param)
+}
+
+func (u *UseCases) Withdraw(ctx context.Context, amount float64, accountID int64, chatID string) error {
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
+	if !ok {
+		return errors.Wrap(gomoney.ErrNotFound, "telegram user")
+	}
+	param := TransferParam{
+		From:    accountID,
+		To:      0,
+		Amount:  amount,
+		ActorID: user.ID,
+	}
+	return u.srv.Withdraw(ctx, param)
+}
+
+func (u *UseCases) Transfer(ctx context.Context, param TransferParam, chatID string) error {
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
+	if !ok {
+		return errors.Wrap(gomoney.ErrNotFound, "telegram user")
+	}
+	param.ActorID = user.ID
+	return u.srv.Transfer(ctx, param)
 }
