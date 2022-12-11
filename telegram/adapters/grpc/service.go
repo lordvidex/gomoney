@@ -156,6 +156,29 @@ func (s *service) GetTransfers(ctx context.Context, userID string) ([]gomoney.Tr
 	return txs, nil
 }
 
+func (s *service) GetTransferSummary(ctx context.Context, userID uuid.UUID) ([]gomoney.TransactionSummary, error) {
+	res, err := s.tcl.GetTransactionSummary(ctx, &grpc3.StringID{Id: userID.String()})
+	if err != nil {
+		return nil, err
+	}
+	summary := make([]gomoney.TransactionSummary, len(res.GetTransactions()))
+	for i := 0; i < len(summary); i++ {
+		tx := res.GetTransactions()[i]
+		summary[i] = gomoney.TransactionSummary{
+			Account:      &gomoney.Account{Id: tx.GetAccount().GetId()},
+			Transactions: make([]gomoney.Transaction, len(tx.GetTransactions())),
+		}
+		for j := 0; j < len(tx.GetTransactions()); j++ {
+			_tx, err := mapTx(tx.GetTransactions()[j])
+			if err != nil {
+				return nil, err
+			}
+			summary[i].Transactions[j] = *_tx
+		}
+	}
+	return summary, nil
+}
+
 func (s *service) Deposit(ctx context.Context, param application.TransferParam) error {
 	_, err := s.tcl.Deposit(ctx, &grpc3.TransactionParam{
 		Amount: param.Amount,

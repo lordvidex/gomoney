@@ -207,12 +207,13 @@ func (t *transactionSummaryImpl) Handle(ctx context.Context, arg TransactionSumm
 
 	for i, acc := range accs {
 		// get the transactions for the account
+		tmp := acc
 		accTxs, err := t.repo.GetLastNTransactions(ctx, acc.Id, SummariesPerAccount)
 		if err != nil {
 			return nil, err
 		}
 		txs[i] = gomoney.TransactionSummary{
-			Account:      &acc,
+			Account:      &tmp,
 			Transactions: accTxs,
 		}
 	}

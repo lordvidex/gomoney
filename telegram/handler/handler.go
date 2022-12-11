@@ -30,6 +30,11 @@ func (b *botHandler) Register() {
 	b.bt.AddHandler("/createaccount", b.CreateAccount, "private")
 	b.bt.AddHandler("/getaccounts", b.GetAccounts, "private")
 	b.bt.AddHandler("/deleteaccount", b.DeleteAccount, "private")
+	b.bt.AddHandler("/transfer", b.Transfer, "private")
+	b.bt.AddHandler("/deposit", b.Deposit, "private")
+	b.bt.AddHandler("/withdraw", b.Withdraw, "private")
+	b.bt.AddHandler("/gettransaction", b.GetTransaction, "private")
+	b.bt.AddHandler("/getsummary", b.GetSummary, "private")
 	b.bt.AddHandler("/help", b.HelpMessage, "all")
 }
 

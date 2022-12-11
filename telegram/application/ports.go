@@ -16,6 +16,7 @@ type Service interface {
 
 	GetAccountTransfers(ctx context.Context, accountID int64, userID uuid.UUID) ([]gomoney.Transaction, error)
 	GetTransfers(ctx context.Context, userID string) ([]gomoney.Transaction, error)
+	GetTransferSummary(ctx context.Context, userID uuid.UUID) ([]gomoney.TransactionSummary, error)
 	Transfer(ctx context.Context, param TransferParam) error
 	Deposit(ctx context.Context, param TransferParam) error
 	Withdraw(ctx context.Context, param TransferParam) error

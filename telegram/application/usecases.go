@@ -98,6 +98,14 @@ func (u *UseCases) GetAccountTransfers(ctx context.Context, accountID int64, cha
 	return u.srv.GetAccountTransfers(ctx, accountID, user.ID)
 }
 
+func (u *UseCases) GetTransferSummary(ctx context.Context, chatID string) ([]gomoney.TransactionSummary, error) {
+	user, ok := u.c.GetUserFromChatID(ctx, chatID)
+	if !ok {
+		return nil, errors.Wrap(gomoney.ErrNotFound, "telegram user")
+	}
+	return u.srv.GetTransferSummary(ctx, user.ID)
+}
+
 func (u *UseCases) Deposit(ctx context.Context, amount float64, accountID int64, chatID string) error {
 	user, ok := u.c.GetUserFromChatID(ctx, chatID)
 	if !ok {

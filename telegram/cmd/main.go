@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	bt "github.com/SakoDroid/telego"
@@ -65,11 +64,7 @@ func start(bot *bt.Bot, app *application.UseCases, ctx context.Context) {
 		if update.Message == nil {
 			continue
 		}
-		fmt.Println("The chat id is", update.Message.Chat.Id)
-		_, err := bot.SendMessage(update.Message.Chat.Id, "You said: "+update.Message.Text, "", update.Message.MessageId, false, false)
-		if err != nil {
-			fmt.Println(err)
-		}
+		h.HelpMessage(update)
 	}
 }
 
