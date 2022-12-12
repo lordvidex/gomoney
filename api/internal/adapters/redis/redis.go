@@ -7,11 +7,16 @@ import (
 	"log"
 )
 
-func NewConnection(c *config.Config) *redis.Client {
+const (
+	MainCache = iota
+	TestCache
+)
+
+func NewConnection(c *config.Config, db int) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     c.Get("REDIS_URL"),
 		Password: c.Get("REDIS_PASSWORD"),
-		DB:       0,
+		DB:       db,
 	})
 	err := client.Ping(context.Background()).Err()
 	if err != nil {

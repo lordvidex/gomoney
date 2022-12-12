@@ -30,16 +30,16 @@ func (h *router) setupRoutes() {
 	// Authenticated EndPoints
 
 	// - Accounts EndPoint
-	api.Get("/account", auth, h.wrap(handlers.GetAccounts))
-	api.Post("/account", auth, h.wrap(handlers.CreateAccount))
+	api.Get("/accounts", auth, h.wrap(handlers.GetAccounts))
+	api.Post("/accounts", auth, h.wrap(handlers.CreateAccount))
 	//auth.Get("/account:id", h)
 
 	// - Transactions EndPoint
-	api.Post("/api/transactions/transfer", auth, h.wrap(handlers.CreateTransfers))
-	api.Post("/api/transactions/deposit", auth, h.wrap(handlers.CreateDeposit))
-	api.Post("/api/transactions/withdraw", auth, h.wrap(handlers.CreateWithdraw))
-	api.Get("/api/transactions/:id", auth, h.wrap(handlers.GetAccountTransactions))
-	api.Get("/api/transactions/", auth, h.wrap(handlers.GetTransactions))
+	api.Post("/transactions/transfer", auth, h.wrap(handlers.CreateTransfers))
+	api.Post("/transactions/deposit", auth, h.wrap(handlers.CreateDeposit))
+	api.Post("/transactions/withdraw", auth, h.wrap(handlers.CreateWithdraw))
+	api.Get("/transactions/:id", auth, h.wrap(handlers.GetAccountTransactions))
+	api.Get("/transactions/", auth, h.wrap(handlers.GetTransactions))
 }
 
 func (h *router) Listen() error {

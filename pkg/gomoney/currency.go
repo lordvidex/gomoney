@@ -4,8 +4,8 @@ type Currency string
 
 const (
 	USD Currency = "USD"
-	RUB Currency = "RUB"
-	NGN Currency = "NGN"
+	RUB          = "RUB"
+	NGN          = "NGN"
 )
 
 func (c Currency) IsValid() bool {

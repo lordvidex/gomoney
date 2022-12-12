@@ -33,7 +33,7 @@ func main() {
 	th := paseto.New([]byte(symmetricKey))
 
 	// create redis client & userRepo
-	client := redis.NewConnection(c)
+	client := redis.NewConnection(c, redis.MainCache)
 	userRepo := redis.NewUserRepo(client)
 
 	// bind application
