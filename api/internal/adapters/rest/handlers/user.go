@@ -6,8 +6,8 @@ import (
 )
 
 type loginUserReq struct {
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
+	Phone    string `json:"phone" validate:"required,number"`
+	Password string `json:"password" validate:"required"`
 }
 
 func Login(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -15,6 +15,11 @@ func Login(uc *application.Usecases, ctx *fiber.Ctx) error {
 	var req loginUserReq
 	if err := parseBody(ctx, &req); err != nil {
 		return err
+	}
+
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	// call app function
@@ -37,11 +42,18 @@ type createUserReq struct {
 }
 
 func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
+	// parse request body
 	var req createUserReq
 	if err := parseBody(ctx, &req); err != nil {
 		return err
 	}
 
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
+	}
+
+	// call create user service
 	_, err := uc.CreateUser.Handle(ctx.UserContext(), application.CreateUserParam{
 		Name:     req.Name,
 		Phone:    req.Phone,

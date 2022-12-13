@@ -24,6 +24,11 @@ func CreateTransfers(uc *application.Usecases, ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
+	}
 
 	_, err = uc.Transfer.Handle(ctx.UserContext(), application.CreateTransferParam{
 		ActorID: user.ID.String(),
@@ -57,6 +62,11 @@ func CreateDeposit(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return err
 	}
 
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
+	}
+
 	_, err = uc.Deposit.Handle(ctx.UserContext(), application.DepositParam{
 		ActorID: user.ID.String(),
 		ToID:    req.ToAccountID,
@@ -85,6 +95,11 @@ func CreateWithdraw(uc *application.Usecases, ctx *fiber.Ctx) error {
 	var req createWithdraw
 	if err = parseBody(ctx, &req); err != nil {
 		return err
+	}
+
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	_, err = uc.Withdraw.Handle(ctx.UserContext(), application.WithdrawParam{
@@ -130,6 +145,11 @@ func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 	err = parseUri(ctx, &req)
 	if err != nil {
 		return err
+	}
+
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	transactions, err := uc.GetAccountTransactions.Handle(ctx.UserContext(), application.UserWithAccount{

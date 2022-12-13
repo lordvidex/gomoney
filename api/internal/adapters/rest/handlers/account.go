@@ -6,6 +6,14 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
+type accountResponse struct {
+	ID          int64            `json:"id"`
+	Title       string           `json:"title"`
+	Description string           `json:"description"`
+	Currency    gomoney.Currency `json:"currency"`
+	Balance     float64          `json:"balance"`
+}
+
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	// get the user from the context
 	u, err := userFromCtx(ctx)
@@ -20,13 +28,17 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	return ctx.Status(fiber.StatusOK).JSON(accounts)
+	res := make([]accountResponse, len(accounts))
+	for i, acc := range accounts {
+		res[i] = accToResponse(acc)
+	}
+	return ctx.Status(fiber.StatusOK).JSON(res)
 }
 
 type createAccountReq struct {
 	Title       string           `json:"title" validate:"required"`
 	Description string           `json:"description" validate:"required"`
-	Currency    gomoney.Currency `json:"currency" validate:"required"`
+	Currency    gomoney.Currency `json:"currency" validate:"required,oneof=USD EUR NGN"`
 }
 
 func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -41,10 +53,10 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 	if err = parseBody(ctx, &req); err != nil {
 		return err
 	}
-	if req.Currency.IsValid() == false {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid currency",
-		})
+
+	// validate body request
+	if errs := validateStruct(req, ctx); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	id, err := uc.CreateAccount.Handle(ctx.UserContext(), application.CreateAccountParam{
@@ -66,4 +78,14 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 			"id": id,
 		},
 	})
+}
+
+func accToResponse(acc gomoney.Account) accountResponse {
+	return accountResponse{
+		ID:          acc.Id,
+		Title:       acc.Title,
+		Description: acc.Description,
+		Currency:    acc.Currency,
+		Balance:     acc.Balance,
+	}
 }

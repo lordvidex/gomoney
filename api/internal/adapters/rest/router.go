@@ -32,12 +32,13 @@ func (h *router) setupRoutes() {
 	// - Accounts EndPoint
 	api.Get("/accounts", auth, h.wrap(handlers.GetAccounts))
 	api.Post("/accounts", auth, h.wrap(handlers.CreateAccount))
-	//auth.Get("/account:id", h)
 
 	// - Transactions EndPoint
 	api.Post("/transactions/transfer", auth, h.wrap(handlers.CreateTransfers))
 	api.Post("/transactions/deposit", auth, h.wrap(handlers.CreateDeposit))
 	api.Post("/transactions/withdraw", auth, h.wrap(handlers.CreateWithdraw))
+
+	// Validation is done in the handler
 	api.Get("/transactions/:id", auth, h.wrap(handlers.GetAccountTransactions))
 	api.Get("/transactions/", auth, h.wrap(handlers.GetTransactions))
 }

@@ -3,8 +3,6 @@ package core
 import (
 	"errors"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -12,7 +10,6 @@ var (
 )
 
 type Payload struct {
-	ID       uuid.UUID
 	Phone    string    `json:"phone"`
 	IssuedAt time.Time `json:"iat"`
 	ExpireAt time.Time `json:"exp"`
