@@ -83,7 +83,7 @@ func tablify(header []string, data [][]string) string {
 	}
 
 	all := func() int {
-		sum := -1
+		sum := 1
 		for i := 0; i < len(lens); i++ {
 			sum += lens[i]
 		}

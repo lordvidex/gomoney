@@ -78,7 +78,7 @@ func (b *botHandler) GetUser(u *objs.Update) {
 		}
 		return
 	}
-	fmt.Println(b.bt.SendMessage(u.Message.Chat.Id, BeautifulUserData(user), "MarkdownV2", u.Message.MessageId, false, false))
+	b.bt.SendMessage(u.Message.Chat.Id, BeautifulUserData(user), "MarkdownV2", u.Message.MessageId, false, false)
 }
 
 func (b *botHandler) Login(u *objs.Update) {
@@ -108,7 +108,6 @@ func (b *botHandler) Login(u *objs.Update) {
 		b.bt.SendMessage(u.Message.Chat.Id, "You took too long to respond", "", u.Message.MessageId, false, false)
 		return
 	case update := <-*ch: // if message is received from the channel
-
 		if update.Message.Contact != nil {
 			phone := update.Message.Contact.PhoneNumber
 			if !strings.HasPrefix(phone, "+") {

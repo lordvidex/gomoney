@@ -289,12 +289,9 @@ func (b *botHandler) GetSummary(u *objs.Update) {
 		log.Println(err)
 		return
 	}
-	fmt.Println(*summaries[0].Account, *summaries[1].Account)
 	for i := 0; i < len(summaries); i++ {
 		id := summaries[i].Account.Id
-		fmt.Println(id)
 		summaries[i].Account = m[id]
 	}
-	fmt.Println(m)
 	b.bt.SendMessage(u.Message.Chat.Id, BeautifulTransferSummary(summaries), "MarkdownV2", u.Message.MessageId, false, false)
 }
