@@ -25,8 +25,8 @@ func parseBody(ctx *fiber.Ctx, obj interface{}) error {
 	return nil
 }
 
-func parseUri(ctx *fiber.Ctx, obj interface{}) error {
-	if err := ctx.ParamsParser(&obj); err != nil {
+func parseParams(ctx *fiber.Ctx, obj interface{}) error {
+	if err := ctx.ParamsParser(obj); err != nil {
 		_ = ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -36,7 +36,7 @@ func parseUri(ctx *fiber.Ctx, obj interface{}) error {
 }
 
 func setCtxBodyError(ctx *fiber.Ctx, err error) error {
-	return ctx.JSON(fiber.Map{
+	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 		"error": err.Error(),
 	})
 }

@@ -7,7 +7,7 @@ import (
 
 type createTransfer struct {
 	FromAccountID int64   `json:"from_account_id" validate:"required,number,min=1"`
-	ToAccountID   int64   `json:"to_account_id" validate:"required,number,min=1"`
+	ToAccountID   int64   `json:"to_account_id" validate:"required,number,min=1,nefield=FromAccountID"`
 	Amount        float64 `json:"amount" validate:"required,number,min=1"`
 }
 
@@ -24,9 +24,9 @@ func CreateTransfers(uc *application.Usecases, ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
@@ -63,7 +63,7 @@ func CreateDeposit(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
@@ -98,7 +98,7 @@ func CreateWithdraw(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
@@ -130,7 +130,7 @@ func GetTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 }
 
 type getAccountTransferParam struct {
-	AccountID int64 `uri:"account_id" validate:"required,number,min=1"`
+	AccountID int64 `params:"id" validate:"required,number,min=1"`
 }
 
 func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -142,13 +142,13 @@ func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 
 	// Parse request body
 	var req getAccountTransferParam
-	err = parseUri(ctx, &req)
+	err = parseParams(ctx, &req)
 	if err != nil {
 		return err
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 

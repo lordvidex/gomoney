@@ -36,9 +36,9 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 }
 
 type createAccountReq struct {
-	Title       string           `json:"title" validate:"required"`
-	Description string           `json:"description" validate:"required"`
-	Currency    gomoney.Currency `json:"currency" validate:"required,oneof=USD EUR NGN"`
+	Title       string           `json:"title" validate:"required,min=5"`
+	Description string           `json:"description" validate:"required,min=5"`
+	Currency    gomoney.Currency `json:"currency" validate:"required,oneof=USD RUB NGN"`
 }
 
 func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -55,7 +55,7 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 

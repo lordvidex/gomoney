@@ -4,9 +4,12 @@ go 1.19
 
 require (
 	github.com/SakoDroid/telego v1.8.0
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/gofiber/fiber/v2 v2.40.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/golang/mock v1.6.0
+	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgtype v1.12.0
@@ -29,8 +32,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.11.1 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
@@ -39,7 +40,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.1 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.41.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect

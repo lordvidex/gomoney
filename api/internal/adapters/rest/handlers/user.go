@@ -6,8 +6,8 @@ import (
 )
 
 type loginUserReq struct {
-	Phone    string `json:"phone" validate:"required,number"`
-	Password string `json:"password" validate:"required"`
+	Phone    string `json:"phone" validate:"required,number,min=11"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 func Login(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -18,7 +18,7 @@ func Login(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
@@ -49,12 +49,12 @@ func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// validate body request
-	if errs := validateStruct(req, ctx); errs != nil {
+	if errs := validateStruct(req); errs != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	// call create user service
-	_, err := uc.CreateUser.Handle(ctx.UserContext(), application.CreateUserParam{
+	uid, err := uc.CreateUser.Handle(ctx.UserContext(), application.CreateUserParam{
 		Name:     req.Name,
 		Phone:    req.Phone,
 		Password: req.Password,
@@ -64,6 +64,7 @@ func Register(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"user_id": uid,
 		"message": "User successfully created",
 	})
 }
