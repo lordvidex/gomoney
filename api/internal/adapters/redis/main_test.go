@@ -1,14 +1,19 @@
 package redis
 
 import (
+	"os"
+	"testing"
+
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/gomoney/pkg/config"
-	"testing"
 )
 
-var client *redis.Client
+var testClient *redis.Client
 
-func TestMain(t *testing.M) {
+func TestMain(m *testing.M) {
 	c := config.New()
-	client = NewConnection(c, TestCache)
+	testClient = NewConnection(c, TestCache)
+
+	code := m.Run()
+	os.Exit(code)
 }

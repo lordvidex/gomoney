@@ -2,9 +2,10 @@ package redis
 
 import (
 	"context"
+	"log"
+
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/gomoney/pkg/config"
-	"log"
 )
 
 const (
