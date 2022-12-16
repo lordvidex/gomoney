@@ -5,15 +5,15 @@ services:
                 image: lordvidex/gomoney-central:0.2
                 secrets:
                         - gomoney_database_url
+
                 environment:
                         - DATABASE_URL_FILE=/run/secrets/gomoney_database_url
+                        - MIGRATION_DIRECTORY=file:///migrations
                 deploy:
                         restart_policy:
                                 condition: on-failure
                 ports:
                         - "8002:8080"
-                networks:
-                        - local
                 extra_hosts:
                         - "host.docker.internal:host-gateway"
 
@@ -29,10 +29,13 @@ services:
                         - REDIS_PASSWORD_FILE=/run/secrets/gomoney_redis_password
                         - BOT_TOKEN_FILE=/run/secrets/gomoney_bot_token
                 depends_on:
-                       - server           
+                       - server
+                extra_hosts:
+                       - "host.docker.internal:host-gateway"
+
         api:
                 image: lordvidex/gomoney-api:0.2
-                secrets: 
+                secrets:
                         - gomoney_redis_url
                         - gomoney_redis_password
                         - gomoney_symmetric_key
@@ -41,10 +44,10 @@ services:
                         - REDIS_URL_FILE=/run/secrets/gomoney_redis_url
                         - REDIS_PASSWORD_FILE=/run/secrets/gomoney_redis_password
                         - SYMMETRIC_KEY_FILE=/run/secrets/gomoney_symmetric_key
-
-networks:
-         local:
-                driver: bridge
+                ports:
+                        - "8003:8000"
+                extra_hosts:
+                        - "host.docker.internal:host-gateway"
 
 secrets:
         gomoney_database_url:
@@ -56,4 +59,4 @@ secrets:
         gomoney_symmetric_key:
                 external: true
         gomoney_bot_token:
-                external: true        
+                external: true
