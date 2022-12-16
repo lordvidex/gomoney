@@ -20,4 +20,5 @@ FROM alpine:latest AS production
 COPY --from=builder /go/bin/gomoney-server /go/bin/gomoney-server
 COPY --from=builder /migrations /migrations
 EXPOSE 8080
+EXPOSE 8081
 ENTRYPOINT ["/go/bin/gomoney-server"]

@@ -17,4 +17,5 @@ RUN go build -o /go/bin/gomoney-api api/cmd/main.go
 
 FROM alpine:latest AS production
 COPY --from=builder /go/bin/gomoney-api /go/bin/gomoney-api
+EXPOSE 8080
 ENTRYPOINT ["/go/bin/gomoney-api"]

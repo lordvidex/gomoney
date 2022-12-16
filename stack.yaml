@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+        server:
+                image: lordvidex/gomoney-central:0.2
+                secrets:
+                        - gomoney_database_url
+                environment:
+                        - DATABASE_URL_FILE=/run/secrets/gomoney_database_url
+                deploy:
+                        restart_policy:
+                                condition: on-failure
+                ports:
+                        - "8002:8080"
+                networks:
+                        - local
+
+        telegram:
+                image: lordvidex/gomoney-telegram:0.2
+                secrets:
+                        - gomoney_redis_url
+                        - gomoney_bot_token
+                        - gomoney_redis_password
+                environment:
+                        - GRPC_SERVER="server:8080"
+                        - REDIS_URL_FILE=/run/secrets/gomoney_redis_url
+                        - REDIS_PASSWORD_FILE=/run/secrets/gomoney_redis_password
+                        - BOT_TOKEN_FILE=/run/secrets/gomoney_bot_token
+                depends_on:
+                       - server           
+        api:
+                image: lordvidex/gomoney-api:0.2
+                secrets: 
+                        - gomoney_redis_url
+                        - gomoney_redis_password
+                        - gomoney_symmetric_key
+                environment:
+                        - GRPC_SERVER=server-dev:8080
+                        - REDIS_URL_FILE=/run/secrets/gomoney_redis_url
+                        - REDIS_PASSWORD_FILE=/run/secrets/gomoney_redis_password
+                        - SYMMETRIC_KEY_FILE=/run/secrets/gomoney_symmetric_key
+
+networks:
+         local:
+                driver: bridge
+
+secrets:
+        gomoney_database_url:
+                external: true
+        gomoney_redis_url:
+                external: true
+        gomoney_redis_password:
+                external: true
+        gomoney_symmetric_key:
+                external: true
+        gomoney_bot_token:
+                external: true        
