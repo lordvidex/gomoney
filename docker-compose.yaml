@@ -27,6 +27,18 @@ services:
       - "6379:6379"
     volumes:
       - cache:/data
+  redis-db:
+    container_name: "gomoney-redis"
+    image: redis:latest
+    restart: always
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - ./db.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -36,7 +48,7 @@ services:
   server-dev:
     container_name: "gomoney-grpc-server"
     volumes:
-      - ./server:/go/src/github.com/lordvidex/gomoney/server
+      - .:/go/src/github.com/lordvidex/gomoney
     environment:
       - DATABASE_URL=${DATABASE_URL}
     build:
@@ -52,7 +64,7 @@ services:
   api:
     container_name: "gomoney-api-server"
     volumes:
-      - ./api:/go/src/github.com/lordvidex/gomoney-api/api
+      - .:/go/src/github.com/lordvidex/gomoney-api/
     environment:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
@@ -69,11 +81,21 @@ services:
 
   telegram:
     container_name: "gomoney-telegram-server"
+    environment:
+      - GRPC_SERVER=server-dev:8080
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - .:/go/src/github.com/lordvidex/gomoney/
     build:
       dockerfile: deployments/Dockerfile-telegram
-    ports:
-      - "8001:8080"
+      target: development
+    depends_on:
+      redis-db:
+        condition: service_healthy
 
 volumes:
   db:
   cache:
+  redis:

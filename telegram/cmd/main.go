@@ -1,54 +1,73 @@
 package main
 
 import (
-	"fmt"
-	"time"
+	"context"
+	"log"
 
 	bt "github.com/SakoDroid/telego"
 	cfg "github.com/SakoDroid/telego/configs"
-	objs "github.com/SakoDroid/telego/objects"
+	"github.com/lordvidex/gomoney/pkg/config"
+	mgrpc "github.com/lordvidex/gomoney/telegram/adapters/grpc"
+	"github.com/lordvidex/gomoney/telegram/adapters/redis"
+	"github.com/lordvidex/gomoney/telegram/application"
+	"github.com/lordvidex/gomoney/telegram/handler"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-const (
-	apiToken = "5817152401:AAGQKxskK9tN_I7oordUsblu1z5hQyzlmfI"
-)
-
-//gomoneyztest_bot
+// @gomoni_bot
 
 func main() {
+	// read configs
+	c := config.New()
 
-	bot, err := bt.NewBot(cfg.Default(apiToken))
-
-	if err == nil {
-		err = bot.Run()
-		if err == nil {
-			start(bot)
-		}
+	bot, err := bt.NewBot(cfg.Default(c.Get("BOT_TOKEN")))
+	if err != nil {
+		log.Fatal(err)
 	}
+	err = bot.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// create grpc service
+	grpconn, err := connectGRPC(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	srv := mgrpc.New(grpconn)
+
+	// create redis cache
+	cache := redis.NewCache(redis.NewConn(ctx, c))
+
+	uc := application.New(srv, cache)
+
+	start(bot, uc, ctx)
 }
 
-func start(bot *bt.Bot) {
+func start(bot *bt.Bot, app *application.UseCases, ctx context.Context) {
 
 	//The general update channel.
 	updateChannel := bot.GetUpdateChannel()
-	//Adding a handler. Everytime the bot receives message "hi" in a private chat, it will respond "hi to you too".
-	bot.AddHandler("hi", func(u *objs.Update) {
-		if u.Message.Chat.Id == 672015206 {
-			time.Sleep(time.Minute)
-		}
-		_, err := bot.SendMessage(u.Message.Chat.Id, "hi to you too", "", u.Message.MessageId, false, false)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}, "private")
-
-	//Monitores any other update. (Updates that don't contain text message "hi" in a private chat)
+	h := handler.NewBotHandler(bot, app, ctx)
+	h.Register()
+	//Monitors any other update. (Updates that don't contain text message "hi" in a private chat)
 	for {
 		update := <-*updateChannel
-		fmt.Println("The chat id is", update.Message.Chat.Id)
-		_, err := bot.SendMessage(update.Message.Chat.Id, "You said: "+update.Message.Text, "", update.Message.MessageId, false, false)
-		if err != nil {
-			fmt.Println(err)
+		if update.Message == nil {
+			continue
 		}
+		h.HelpMessage(update)
 	}
+}
+
+func connectGRPC(c *config.Config) (*grpc.ClientConn, error) {
+	server := c.Get("GRPC_SERVER")
+	if server == "" {
+		return nil, errors.New("key 'GRPC_SERVER' not set")
+	}
+	return grpc.Dial(server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 }

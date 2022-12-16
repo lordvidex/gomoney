@@ -152,7 +152,6 @@ func (s service) GetTransactions(ctx context.Context, param application.UserWith
 		User:    &lgrpc.StringID{Id: param.UserID},
 		Account: &lgrpc.IntID{Id: param.AccountID},
 	})
-
 	if err != nil {
 		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
 	}
@@ -166,11 +165,6 @@ func (s service) GetTransactions(ctx context.Context, param application.UserWith
 	if err != nil {
 		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
 	}
-
-	if err != nil {
-		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
-	}
-
 	return mapPTxSummaryToTxSummary(accTx, m), nil
 }
 

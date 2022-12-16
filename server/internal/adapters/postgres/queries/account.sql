@@ -6,3 +6,6 @@ SELECT * FROM "accounts" WHERE user_id = $1;
 
 -- name: GetAccount :one
 SELECT * FROM "accounts" WHERE id = $1;
+
+-- name: DeleteAccount :exec
+DELETE FROM "accounts" WHERE id = $1;

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "transactions"
     type            transaction_type NOT NULL,
     created_at      timestamptz      NOT NULL DEFAULT NOW(),
 
-    from_account_id BIGINT REFERENCES accounts (id),
-    to_account_id   BIGINT REFERENCES accounts (id)
+    from_account_id BIGINT REFERENCES accounts (id) ON DELETE CASCADE,
+    to_account_id   BIGINT REFERENCES accounts (id) ON DELETE CASCADE
 
 )

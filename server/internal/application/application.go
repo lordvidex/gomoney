@@ -15,6 +15,7 @@ func New(ur UserRepository, ar AccountRepository, l TxLocker) *UseCases {
 			Transfer:      NewTransferCommand(ar, l),
 			Deposit:       NewDepositCommand(ar, l),
 			Withdrawal:    NewWithdrawCommand(ar, l),
+			DeleteAccount: NewDeleteAccountCommand(ar),
 		},
 	}
 }
@@ -37,4 +38,5 @@ type Command struct {
 	Transfer      TransferCommand
 	Deposit       DepositCommand
 	Withdrawal    WithdrawCommand
+	DeleteAccount DeleteAccountCommand
 }

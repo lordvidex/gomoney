@@ -22,3 +22,5 @@ sqlc:
 
 mock-api:
 	mockgen -package mocks -destination ./api/internal/adapters/mock/mock_service.go -source ./api/internal/application/ports.go 
+mock-server:
+	mockgen -source ./server/internal/application/ports.go -destination ./server/internal/application/ports_mock.go -package application

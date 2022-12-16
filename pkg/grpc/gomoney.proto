@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package grpc;
  import "google/protobuf/timestamp.proto";
+ import "google/protobuf/empty.proto";
 
 option go_package = "github.com/lordvidex/gomoney/pkg/grpc";
 
@@ -92,6 +93,7 @@ service UserService {
 service AccountService {
   rpc GetAccounts(StringID) returns (ManyAccounts) {} // get all accounts of a user
   rpc CreateAccount(ManyAccounts) returns (IntID) {} // create an account for a user
+  rpc DeleteAccount(UserWithAccount) returns (google.protobuf.Empty) {}
 }
 
 service TransactionService {

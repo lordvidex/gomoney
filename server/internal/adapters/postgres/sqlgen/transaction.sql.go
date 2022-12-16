@@ -42,6 +42,7 @@ from (SELECT id, amount, type, created_at, from_account_id, to_account_id
       LIMIT $2) tx
          LEFT JOIN "accounts" fr ON tx.from_account_id = fr.id
          LEFT JOIN "accounts" t ON tx.to_account_id = t.id
+ORDER BY created_at DESC LIMIT $2
 `
 
 type GetTransactionsParams struct {
