@@ -1,17 +1,19 @@
 package main
 
 import (
+
+	"log"
+
 	"github.com/lordvidex/gomoney/api/internal/adapters/encryption"
 	mgrpc "github.com/lordvidex/gomoney/api/internal/adapters/grpc"
+	"github.com/lordvidex/gomoney/api/internal/adapters/handlers"
 	"github.com/lordvidex/gomoney/api/internal/adapters/paseto"
 	"github.com/lordvidex/gomoney/api/internal/adapters/redis"
-	"github.com/lordvidex/gomoney/api/internal/adapters/rest"
 	"github.com/lordvidex/gomoney/api/internal/application"
 	"github.com/lordvidex/gomoney/pkg/config"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 )
 
 func main() {
@@ -33,7 +35,7 @@ func main() {
 	th := paseto.New([]byte(symmetricKey))
 
 	// create redis client & userRepo
-	client := redis.NewConnection(c)
+	client := redis.NewConnection(c, redis.MainCache)
 	userRepo := redis.NewUserRepo(client)
 
 	// bind application
@@ -41,7 +43,7 @@ func main() {
 	app := application.New(userRepo, th, service, ph)
 
 	// drive application
-	restHandler := rest.New(app)
+	restHandler := handlers.New(app)
 	if err = restHandler.Listen(); err != nil {
 		log.Fatal(err)
 	}

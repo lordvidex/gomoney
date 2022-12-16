@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/api/internal/application"
 	"github.com/lordvidex/gomoney/api/internal/core"
@@ -54,6 +55,7 @@ func (s service) GetAccounts(ctx context.Context, ID string) ([]gomoney.Account,
 	accs := make([]gomoney.Account, len(acc.Accounts))
 	for i, acci := range acc.Accounts {
 		accs[i] = *mapPAccToAcc(acci)
+		accs[i].OwnerID = uuid.MustParse(ID)
 	}
 	return accs, nil
 }
@@ -95,7 +97,7 @@ func (s service) Transfer(ctx context.Context, param application.CreateTransferP
 }
 
 func (s service) Deposit(ctx context.Context, param application.DepositParam) (*gomoney.Transaction, error) {
-	transaction, err := s.tcl.Transfer(ctx, &lgrpc.TransactionParam{
+	transaction, err := s.tcl.Deposit(ctx, &lgrpc.TransactionParam{
 		To:     &param.ToID,
 		Amount: param.Amount,
 		Actor: &lgrpc.StringID{
@@ -109,7 +111,7 @@ func (s service) Deposit(ctx context.Context, param application.DepositParam) (*
 }
 
 func (s service) Withdraw(ctx context.Context, param application.WithdrawParam) (*gomoney.Transaction, error) {
-	transaction, err := s.tcl.Transfer(ctx, &lgrpc.TransactionParam{
+	transaction, err := s.tcl.Withdraw(ctx, &lgrpc.TransactionParam{
 		From:   &param.FromID,
 		Amount: param.Amount,
 		Actor: &lgrpc.StringID{
@@ -128,9 +130,19 @@ func (s service) GetTransactionSummary(ctx context.Context, userID string) ([]go
 		return nil, errors.Wrap(err, ErrServiceCall.Error())
 	}
 
+	accs, err := s.GetAccounts(ctx, userID)
+	m := make(map[int64]*gomoney.Account)
+	for _, acc := range accs {
+		m[acc.Id] = &acc
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, ErrServiceCall.Error())
+	}
+
 	txs := make([]gomoney.TransactionSummary, len(transactions.Transactions))
 	for i, tx := range transactions.Transactions {
-		txs[i] = mapPTxSummaryToTxSummary(tx)
+		txs[i] = mapPTxSummaryToTxSummary(tx, m)
 	}
 	return txs, nil
 }
@@ -144,7 +156,16 @@ func (s service) GetTransactions(ctx context.Context, param application.UserWith
 		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
 	}
 
-	return mapPTxSummaryToTxSummary(accTx), nil
+	accs, err := s.GetAccounts(ctx, param.UserID)
+	m := make(map[int64]*gomoney.Account)
+	for _, acc := range accs {
+		m[acc.Id] = &acc
+	}
+
+	if err != nil {
+		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
+	}
+	return mapPTxSummaryToTxSummary(accTx, m), nil
 }
 
 func mapPAccToAcc(acc *lgrpc.Account) *gomoney.Account {
@@ -175,10 +196,9 @@ func mapPTxToTx(t *lgrpc.Transaction) *gomoney.Transaction {
 	}
 }
 
-func mapPTxSummaryToTxSummary(t *lgrpc.AccountTransactions) gomoney.TransactionSummary {
+func mapPTxSummaryToTxSummary(t *lgrpc.AccountTransactions, m map[int64]*gomoney.Account) gomoney.TransactionSummary {
 	var accTx gomoney.TransactionSummary
-	// TODO: get account by id from account service
-	//accTx.Account = t.Account.Id
+	accTx.Account = m[t.Account.Id]
 	accTx.Transactions = make([]gomoney.Transaction, len(t.Transactions))
 	for i, tx := range t.Transactions {
 		accTx.Transactions[i] = *mapPTxToTx(tx)

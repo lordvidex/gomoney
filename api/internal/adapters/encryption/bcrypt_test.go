@@ -10,11 +10,11 @@ func TestPasswordHash(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := hasher.CheckPasswordHash(hash, "password"); err != nil {
+	if err = hasher.CheckPasswordHash(hash, "password"); err != nil {
 		t.Error(err)
 	}
 
-	if err := hasher.CheckPasswordHash(hash, "123123123"); err == nil {
+	if err = hasher.CheckPasswordHash(hash, "123123123"); err == nil {
 		t.Error("password should not match")
 	}
 }

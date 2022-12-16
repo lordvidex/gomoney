@@ -2,16 +2,22 @@ package redis
 
 import (
 	"context"
+	"log"
+
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/gomoney/pkg/config"
-	"log"
 )
 
-func NewConnection(c *config.Config) *redis.Client {
+const (
+	MainCache = iota
+	TestCache = 1
+)
+
+func NewConnection(c *config.Config, db int) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     c.Get("REDIS_URL"),
 		Password: c.Get("REDIS_PASSWORD"),
-		DB:       0,
+		DB:       db,
 	})
 	err := client.Ping(context.Background()).Err()
 	if err != nil {
