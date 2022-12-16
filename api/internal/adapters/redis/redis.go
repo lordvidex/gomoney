@@ -10,7 +10,7 @@ import (
 
 const (
 	MainCache = iota
-	TestCache
+	TestCache = 1
 )
 
 func NewConnection(c *config.Config, db int) *redis.Client {

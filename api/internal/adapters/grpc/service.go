@@ -55,6 +55,7 @@ func (s service) GetAccounts(ctx context.Context, ID string) ([]gomoney.Account,
 	accs := make([]gomoney.Account, len(acc.Accounts))
 	for i, acci := range acc.Accounts {
 		accs[i] = *mapPAccToAcc(acci)
+		accs[i].OwnerID = uuid.MustParse(ID)
 	}
 	return accs, nil
 }

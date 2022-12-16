@@ -6,13 +6,13 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-type accountResponse struct {
-	ID          int64            `json:"id"`
-	Title       string           `json:"title"`
-	Description string           `json:"description"`
-	Currency    gomoney.Currency `json:"currency"`
-	Balance     float64          `json:"balance"`
-}
+// type accountResponse struct {
+// 	ID          int64            `json:"id"`
+// 	Title       string           `json:"title"`
+// 	Description string           `json:"description"`
+// 	Currency    gomoney.Currency `json:"currency"`
+// 	Balance     float64          `json:"balance"`
+// }
 
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	// get the user from the context
@@ -28,11 +28,11 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	res := make([]accountResponse, len(accounts))
-	for i, acc := range accounts {
-		res[i] = accToResponse(acc)
-	}
-	return ctx.Status(fiber.StatusOK).JSON(res)
+	// res := make([]accountResponse, len(accounts))
+	// for i, acc := range accounts {
+	// 	res[i] = accToResponse(acc)
+	// }
+	return ctx.Status(fiber.StatusOK).JSON(accounts)
 }
 
 type createAccountReq struct {
@@ -80,12 +80,12 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 	})
 }
 
-func accToResponse(acc gomoney.Account) accountResponse {
-	return accountResponse{
-		ID:          acc.Id,
-		Title:       acc.Title,
-		Description: acc.Description,
-		Currency:    acc.Currency,
-		Balance:     acc.Balance,
-	}
-}
+// func accToResponse(acc gomoney.Account) accountResponse {
+// 	return accountResponse{
+// 		ID:          acc.Id,
+// 		Title:       acc.Title,
+// 		Description: acc.Description,
+// 		Currency:    acc.Currency,
+// 		Balance:     acc.Balance,
+// 	}
+// }

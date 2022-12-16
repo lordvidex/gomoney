@@ -1,8 +1,7 @@
-package rest
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/lordvidex/gomoney/api/internal/adapters/rest/handlers"
 	"github.com/lordvidex/gomoney/api/internal/application"
 )
 
@@ -21,26 +20,26 @@ func (h *router) wrap(uc UseCaseHandler) func(*fiber.Ctx) error {
 
 func (h *router) setupRoutes() {
 	api := h.f.Group("/api")
-	auth := h.wrap(handlers.AuthMiddleware)
+	auth := h.wrap(AuthMiddleware)
 
 	// Unauthenticated routes
-	api.Post("/login", h.wrap(handlers.Login))
-	api.Post("/register", h.wrap(handlers.Register))
+	api.Post("/login", h.wrap(Login))
+	api.Post("/register", h.wrap(Register))
 
 	// Authenticated EndPoints
 
 	// - Accounts EndPoint
-	api.Get("/accounts", auth, h.wrap(handlers.GetAccounts))
-	api.Post("/accounts", auth, h.wrap(handlers.CreateAccount))
+	api.Get("/accounts", auth, h.wrap(GetAccounts))
+	api.Post("/accounts", auth, h.wrap(CreateAccount))
 
 	// - Transactions EndPoint
-	api.Post("/transactions/transfer", auth, h.wrap(handlers.CreateTransfers))
-	api.Post("/transactions/deposit", auth, h.wrap(handlers.CreateDeposit))
-	api.Post("/transactions/withdraw", auth, h.wrap(handlers.CreateWithdraw))
+	api.Post("/transactions/transfer", auth, h.wrap(CreateTransfers))
+	api.Post("/transactions/deposit", auth, h.wrap(CreateDeposit))
+	api.Post("/transactions/withdraw", auth, h.wrap(CreateWithdraw))
 
 	// Validation is done in the handler
-	api.Get("/transactions/:id", auth, h.wrap(handlers.GetAccountTransactions))
-	api.Get("/transactions/", auth, h.wrap(handlers.GetTransactions))
+	api.Get("/transactions/:id", auth, h.wrap(GetAccountTransactions))
+	api.Get("/transactions/", auth, h.wrap(GetTransactions))
 }
 
 func (h *router) Listen() error {
