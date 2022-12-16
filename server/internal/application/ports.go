@@ -14,6 +14,7 @@ type UserRepository interface {
 
 type AccountRepository interface {
 	CreateAccount(ctx context.Context, arg CreateAccountArg) (int64, error)
+	DeleteAccount(ctx context.Context, accountID int64) error
 	// Transfer must atomically update the balance of both accounts in a transaction
 	// and save the transaction itself in the storage layer
 	Transfer(ctx context.Context, tx *gomoney.Transaction) error

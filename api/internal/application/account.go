@@ -6,6 +6,8 @@ import (
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
+// ------------------ Create new user account ------------------
+
 type CreateAccountParam struct {
 	UserID  uuid.UUID
 	Account gomoney.Account
@@ -27,42 +29,24 @@ func (c *createAccountImpl) Handle(ctx context.Context, param CreateAccountParam
 	return c.srv.CreateAccount(ctx, param.UserID.String(), &param.Account)
 }
 
-type ViewAccountParam struct {
-	AccountID int64
-}
+// ------------------ View transfers for an account ------------------
 
-type ViewAccountQuery interface {
-	Handle(ctx context.Context, param ViewAccountParam) (gomoney.Account, error)
-}
-
-type viewAccountImpl struct {
-	srv Service
-}
-
-func NewViewAccountQuery(srv Service) ViewAccountQuery {
-	return &viewAccountImpl{srv}
-}
-
-func (v *viewAccountImpl) Handle(ctx context.Context, param ViewAccountParam) (gomoney.Account, error) {
-	return v.srv.GetAccount(ctx, param.AccountID)
-}
-
-type ViewAccountsParam struct {
+type GetAccountsParam struct {
 	UserID uuid.UUID
 }
 
-type ViewAccountsQuery interface {
-	Handle(ctx context.Context, param ViewAccountsParam) ([]gomoney.Account, error)
+type GetAccountsQuery interface {
+	Handle(ctx context.Context, param GetAccountsParam) ([]gomoney.Account, error)
 }
 
-type viewAccountsImpl struct {
+type getAccountsImpl struct {
 	srv Service
 }
 
-func NewViewAccountsQuery(srv Service) ViewAccountsQuery {
-	return &viewAccountsImpl{srv}
+func NewGetAccountsQuery(srv Service) GetAccountsQuery {
+	return &getAccountsImpl{srv}
 }
 
-func (v *viewAccountsImpl) Handle(ctx context.Context, param ViewAccountsParam) ([]gomoney.Account, error) {
+func (v *getAccountsImpl) Handle(ctx context.Context, param GetAccountsParam) ([]gomoney.Account, error) {
 	return v.srv.GetAccounts(ctx, param.UserID.String())
 }

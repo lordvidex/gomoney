@@ -19,3 +19,6 @@ docker-rm:
 
 sqlc:
 	sqlc generate
+
+mock-server:
+	mockgen -source ./server/internal/application/ports.go -destination ./server/internal/application/ports_mock.go -package application
