@@ -16,17 +16,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const (
-	apiToken = "5930309571:AAHBedB8K_pOQVa0KQNjA9YP1Mg08AXRzFo"
-)
-
-//gomoneyztest_bot
+// @gomoni_bot
 
 func main() {
 	// read configs
 	c := config.New()
 
-	bot, err := bt.NewBot(cfg.Default(apiToken))
+	bot, err := bt.NewBot(cfg.Default(c.Get("BOT_TOKEN")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,8 +30,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, _ := context.WithCancel(context.Background())
-	//defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// create grpc service
 	grpconn, err := connectGRPC(c)

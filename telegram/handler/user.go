@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	objs "github.com/SakoDroid/telego/objects"
-	"github.com/lordvidex/gomoney/pkg/gomoney"
+	g "github.com/lordvidex/gomoney/pkg/gomoney"
 	app "github.com/lordvidex/gomoney/telegram/application"
 
 	"log"
@@ -54,7 +54,7 @@ func (b *botHandler) CreateUser(u *objs.Update) {
 			})
 			if err != nil {
 				log.Println(err)
-				if gomoney.ErrAlreadyExists.Is(err) {
+				if g.Err().WithCode(g.ErrAlreadyExists).IsCode(err) {
 					b.bt.SendMessage(u.Message.Chat.Id, "You already have an account with this phone number.", "", u.Message.MessageId, false, false)
 					return
 				}
@@ -73,7 +73,7 @@ func (b *botHandler) CreateUser(u *objs.Update) {
 func (b *botHandler) GetUser(u *objs.Update) {
 	user, err := b.a.GetUserByChatID(b.ctx, strconv.Itoa(u.Message.Chat.Id))
 	if err != nil {
-		if gomoney.ErrNotFound.Is(err) {
+		if g.Err().WithCode(g.ErrNotFound).IsCode(err) {
 			b.bt.SendMessage(u.Message.Chat.Id, `You don't have an account yet. Use /createuser to create one.`, "", u.Message.MessageId, false, false)
 		}
 		return
@@ -117,7 +117,7 @@ func (b *botHandler) Login(u *objs.Update) {
 			user, err := b.a.GetUserByPhone(b.ctx, phone, strconv.Itoa(u.Message.Chat.Id))
 			if err != nil {
 				log.Println(err)
-				if gomoney.ErrNotFound.Is(err) {
+				if g.Err().WithCode(g.ErrNotFound).IsCode(err) {
 					b.bt.SendMessage(u.Message.Chat.Id, "User with this phone number does not exist.", "", u.Message.MessageId, false, false)
 					return
 				}

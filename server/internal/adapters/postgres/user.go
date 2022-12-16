@@ -2,12 +2,13 @@ package postgres
 
 import (
 	"context"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/lordvidex/gomoney/pkg/gomoney"
+	g "github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
 	app "github.com/lordvidex/gomoney/server/internal/application"
-	"strings"
 )
 
 type userRepo struct {
@@ -24,21 +25,24 @@ func (r *userRepo) CreateUser(ctx context.Context, arg app.CreateUserArg) (uuid.
 	if err != nil {
 		// check violation of unique constraint
 		if strings.Contains(err.Error(), "unique_phone") {
-			return uuid.Nil, gomoney.ErrAlreadyExists
+			return uuid.Nil,
+				g.Err().
+					WithCode(g.ErrAlreadyExists).
+					WithMessage("user with phone already exists")
 		}
 		return uuid.Nil, err
 	}
 	return id, nil
 }
-func (r *userRepo) GetUserByPhone(ctx context.Context, phone string) (gomoney.User, error) {
+func (r *userRepo) GetUserByPhone(ctx context.Context, phone string) (g.User, error) {
 	user, err := r.Queries.GetUserByPhone(ctx, phone)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return gomoney.User{}, gomoney.ErrNotFound
+			return g.User{}, g.Err().WithCode(g.ErrNotFound)
 		}
-		return gomoney.User{}, err
+		return g.User{}, err
 	}
-	return gomoney.User{
+	return g.User{
 		ID:    user.ID,
 		Name:  user.Name,
 		Phone: user.Phone,

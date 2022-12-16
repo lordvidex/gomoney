@@ -75,6 +75,7 @@ services:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - .:/go/src/github.com/lordvidex/gomoney/
     build:
