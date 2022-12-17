@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"log"
 
 	"github.com/lordvidex/gomoney/api/internal/adapters/encryption"
@@ -35,7 +34,7 @@ func main() {
 	th := paseto.New([]byte(symmetricKey))
 
 	// create redis client & userRepo
-	client := redis.NewConnection(c, redis.MainCache)
+	client := redis.NewConnection(c)
 	userRepo := redis.NewUserRepo(client)
 
 	// bind application

@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/lordvidex/gomoney/pkg/gomoney"
+	g "github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/pkg/errors"
 )
 
@@ -12,10 +12,10 @@ const (
 )
 
 var (
-	ErrSameAccount     = errors.New("cannot transfer to the same account")
-	ErrAccountNotFound = errors.New("account not found")
-	ErrOwnerAction     = errors.New("only owner can perform this action")
-	ErrAmountTooSmall  = errors.New("amount must be greater than zero")
+	ErrSameAccount     = g.Err().WithCode(g.ErrInvalidInput).WithMessage("cannot transfer to the same account")
+	ErrAccountNotFound = g.Err().WithCode(g.ErrNotFound).WithMessage("account not found")
+	ErrOwnerAction     = g.Err().WithCode(g.ErrInvalidInput).WithMessage("only owner can perform this action")
+	ErrAmountTooSmall  = g.Err().WithCode(g.ErrInvalidInput).WithMessage("amount must be greater than zero")
 )
 
 type TransferArg struct {
@@ -25,7 +25,7 @@ type TransferArg struct {
 	ActorID       uuid.UUID
 }
 type TransferCommand interface {
-	Handle(ctx context.Context, arg TransferArg) (*gomoney.Transaction, error)
+	Handle(ctx context.Context, arg TransferArg) (*g.Transaction, error)
 }
 
 type transferImpl struct {
@@ -33,7 +33,7 @@ type transferImpl struct {
 	l    TxLocker
 }
 
-func (t *transferImpl) Handle(ctx context.Context, arg TransferArg) (*gomoney.Transaction, error) {
+func (t *transferImpl) Handle(ctx context.Context, arg TransferArg) (*g.Transaction, error) {
 	if arg.Amount <= 0 {
 		return nil, ErrAmountTooSmall
 	}
@@ -62,7 +62,7 @@ func (t *transferImpl) Handle(ctx context.Context, arg TransferArg) (*gomoney.Tr
 	}
 
 	// create a new transaction
-	tx := gomoney.NewTransaction(accFrom, accTo, arg.Amount, gomoney.Transfer)
+	tx := g.NewTransaction(accFrom, accTo, arg.Amount, g.Transfer)
 	if err = tx.Validate(); err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ type DepositArg struct {
 
 // DepositCommand is a command that the account owner uses to add money to their accounts
 type DepositCommand interface {
-	Handle(ctx context.Context, arg DepositArg) (*gomoney.Transaction, error)
+	Handle(ctx context.Context, arg DepositArg) (*g.Transaction, error)
 }
 
 type depositImpl struct {
@@ -96,7 +96,7 @@ type depositImpl struct {
 	l    TxLocker
 }
 
-func (d *depositImpl) Handle(ctx context.Context, arg DepositArg) (*gomoney.Transaction, error) {
+func (d *depositImpl) Handle(ctx context.Context, arg DepositArg) (*g.Transaction, error) {
 	// validate the amount
 	if arg.Amount <= 0 {
 		return nil, ErrAmountTooSmall
@@ -117,7 +117,7 @@ func (d *depositImpl) Handle(ctx context.Context, arg DepositArg) (*gomoney.Tran
 	}
 
 	// create a new transaction
-	tx := gomoney.NewTransaction(nil, accTo, arg.Amount, gomoney.Deposit)
+	tx := g.NewTransaction(nil, accTo, arg.Amount, g.Deposit)
 	if err = tx.Validate(); err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ type WithdrawArg struct {
 }
 
 type WithdrawCommand interface {
-	Handle(ctx context.Context, arg WithdrawArg) (*gomoney.Transaction, error)
+	Handle(ctx context.Context, arg WithdrawArg) (*g.Transaction, error)
 }
 
 type withdrawImpl struct {
@@ -148,7 +148,7 @@ type withdrawImpl struct {
 	l    TxLocker
 }
 
-func (w *withdrawImpl) Handle(ctx context.Context, arg WithdrawArg) (*gomoney.Transaction, error) {
+func (w *withdrawImpl) Handle(ctx context.Context, arg WithdrawArg) (*g.Transaction, error) {
 	if arg.Amount <= 0 {
 		return nil, ErrAmountTooSmall
 	}
@@ -167,7 +167,7 @@ func (w *withdrawImpl) Handle(ctx context.Context, arg WithdrawArg) (*gomoney.Tr
 	}
 
 	// create the new transaction
-	tx := gomoney.NewTransaction(accFrom, nil, arg.Amount, gomoney.Withdrawal)
+	tx := g.NewTransaction(accFrom, nil, arg.Amount, g.Withdrawal)
 	if err = tx.Validate(); err != nil {
 		return nil, err
 	}
@@ -188,19 +188,19 @@ type TransactionSummaryArg struct {
 }
 
 type TransactionSummaryQuery interface {
-	Handle(ctx context.Context, arg TransactionSummaryArg) ([]gomoney.TransactionSummary, error)
+	Handle(ctx context.Context, arg TransactionSummaryArg) ([]g.TransactionSummary, error)
 }
 
 type transactionSummaryImpl struct {
 	repo AccountRepository
 }
 
-func (t *transactionSummaryImpl) Handle(ctx context.Context, arg TransactionSummaryArg) ([]gomoney.TransactionSummary, error) {
+func (t *transactionSummaryImpl) Handle(ctx context.Context, arg TransactionSummaryArg) ([]g.TransactionSummary, error) {
 	accs, err := t.repo.GetAccountsForUser(ctx, arg.ActorID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get accounts")
 	}
-	txs := make([]gomoney.TransactionSummary, len(accs))
+	txs := make([]g.TransactionSummary, len(accs))
 
 	// an alternative approach (faster but messier) is to get all transactions for the user sorted by date
 	// and then filter them by account INSTEAD of repetitive repo calls.
@@ -212,7 +212,7 @@ func (t *transactionSummaryImpl) Handle(ctx context.Context, arg TransactionSumm
 		if err != nil {
 			return nil, err
 		}
-		txs[i] = gomoney.TransactionSummary{
+		txs[i] = g.TransactionSummary{
 			Account:      &tmp,
 			Transactions: accTxs,
 		}
@@ -230,14 +230,14 @@ type TransactionsArg struct {
 }
 
 type TransactionsQuery interface {
-	Handle(ctx context.Context, arg TransactionsArg) ([]gomoney.Transaction, error)
+	Handle(ctx context.Context, arg TransactionsArg) ([]g.Transaction, error)
 }
 
 type transactionsImpl struct {
 	repo AccountRepository
 }
 
-func (t *transactionsImpl) Handle(ctx context.Context, arg TransactionsArg) ([]gomoney.Transaction, error) {
+func (t *transactionsImpl) Handle(ctx context.Context, arg TransactionsArg) ([]g.Transaction, error) {
 	acc, err := t.repo.GetAccountByID(ctx, arg.AccountID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get account")

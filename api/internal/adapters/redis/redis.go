@@ -8,20 +8,15 @@ import (
 	"github.com/lordvidex/gomoney/pkg/config"
 )
 
-const (
-	MainCache = iota
-	TestCache = 1
-)
-
-func NewConnection(c *config.Config, db int) *redis.Client {
-	client := redis.NewClient(&redis.Options{
-		Addr:     c.Get("REDIS_URL"),
-		Password: c.Get("REDIS_PASSWORD"),
-		DB:       db,
-	})
-	err := client.Ping(context.Background()).Err()
+func NewConnection(c *config.Config) *redis.Client {
+	opt, err := redis.ParseURL(c.Get("REDIS_URL"))
 	if err != nil {
-		log.Fatal(err, "failed to connect to cache")
+		log.Fatal(err, "failed to parse redis url")
+	}
+	client := redis.NewClient(opt)
+	err = client.Ping(context.Background()).Err()
+	if err != nil {
+		log.Fatal(err, "failed to ping cache")
 	}
 	return client
 }

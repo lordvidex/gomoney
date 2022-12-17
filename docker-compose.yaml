@@ -38,8 +38,6 @@ services:
     restart: always
     command: >
       --requirepass ${REDIS_PASSWORD}
-    env_file:
-      - ./db.env
     ports:
       - "6379:6379"
     volumes:
@@ -73,7 +71,6 @@ services:
     environment:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - SYMMETRIC_KEY=${SYMMETRIC_KEY}
     build:
       dockerfile: deployments/Dockerfile-api
@@ -89,7 +86,6 @@ services:
     environment:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - .:/go/src/github.com/lordvidex/gomoney/

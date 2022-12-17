@@ -12,7 +12,7 @@ var testClient *redis.Client
 
 func TestMain(m *testing.M) {
 	c := config.New()
-	testClient = NewConnection(c, TestCache)
+	testClient = NewConnection(c)
 
 	code := m.Run()
 	os.Exit(code)
