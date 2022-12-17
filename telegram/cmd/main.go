@@ -60,7 +60,9 @@ func start(bot *bt.Bot, app *application.UseCases, ctx context.Context) {
 		if update.Message == nil {
 			continue
 		}
-		h.HelpMessage(update)
+		if update.Message.Chat.Type == "private" {
+			h.HelpMessage(update)
+		}
 	}
 }
 

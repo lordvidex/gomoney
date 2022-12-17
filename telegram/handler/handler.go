@@ -25,16 +25,18 @@ func NewBotHandler(bt *bt.Bot, a *app.UseCases, ctx context.Context) *botHandler
 
 func (b *botHandler) Register() {
 	b.bt.AddHandler("/createuser", b.CreateUser, "private")
-	b.bt.AddHandler("/getuser", b.GetUser, "private")
+	b.bt.AddHandler("/createuser", b.CreateGroupUser, "group", "supergroup")
+	b.bt.AddHandler("/getuser", b.GetUser, "all")
 	b.bt.AddHandler("/login", b.Login, "private")
-	b.bt.AddHandler("/createaccount", b.CreateAccount, "private")
-	b.bt.AddHandler("/getaccounts", b.GetAccounts, "private")
-	b.bt.AddHandler("/deleteaccount", b.DeleteAccount, "private")
-	b.bt.AddHandler("/transfer", b.Transfer, "private")
-	b.bt.AddHandler("/deposit", b.Deposit, "private")
-	b.bt.AddHandler("/withdraw", b.Withdraw, "private")
-	b.bt.AddHandler("/gettransaction", b.GetTransaction, "private")
-	b.bt.AddHandler("/getsummary", b.GetSummary, "private")
+	b.bt.AddHandler("/login", b.LoginGroup, "group", "supergroup")
+	b.bt.AddHandler("/createaccount", b.CreateAccount, "all")
+	b.bt.AddHandler("/getaccounts", b.GetAccounts, "all")
+	b.bt.AddHandler("/deleteaccount", b.DeleteAccount, "all")
+	b.bt.AddHandler("/transfer", b.Transfer, "all")
+	b.bt.AddHandler("/deposit", b.Deposit, "all")
+	b.bt.AddHandler("/withdraw", b.Withdraw, "all")
+	b.bt.AddHandler("/gettransaction", b.GetTransaction, "all")
+	b.bt.AddHandler("/getsummary", b.GetSummary, "all")
 	b.bt.AddHandler("/help", b.HelpMessage, "all")
 }
 
