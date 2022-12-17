@@ -36,6 +36,7 @@ func (b *botHandler) CreateGroupUser(u *objs.Update) {
 	}
 	b.simpleSend(u.Message.Chat.Id, fmt.Sprintf("You have successfully registered with id %s. Welcome %s", uid, u.Message.Chat.Title), u.Message.MessageId)
 }
+
 func (b *botHandler) CreateUser(u *objs.Update) {
 	// check if the user exists OR create a new user
 	// get phone number and pass keyboard to get contact

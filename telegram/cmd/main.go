@@ -54,7 +54,7 @@ func start(bot *bt.Bot, app *application.UseCases, ctx context.Context) {
 	updateChannel := bot.GetUpdateChannel()
 	h := handler.NewBotHandler(bot, app, ctx)
 	h.Register()
-	//Monitors any other update. (Updates that don't contain text message "hi" in a private chat)
+	//Monitors any other update.
 	for {
 		update := <-*updateChannel
 		if update.Message == nil {
