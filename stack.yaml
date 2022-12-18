@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
         server:
-                image: lordvidex/gomoney-central:0.2
+                image: lordvidex/gomoney-central:0.3
                 secrets:
                         - gomoney_database_url
                 environment:
@@ -12,12 +12,12 @@ services:
                         restart_policy:
                                 condition: on-failure
                 ports:
-                        - "8002:8080"
+                        - "127.0.0.1:8002:8080"
                 extra_hosts:
                         - "host.docker.internal:host-gateway"
 
         telegram:
-                image: lordvidex/gomoney-telegram:0.2
+                image: lordvidex/gomoney-telegram:0.3
                 secrets:
                         - gomoney_redis_url
                         - gomoney_bot_token
@@ -30,18 +30,17 @@ services:
                 extra_hosts:
                        - "host.docker.internal:host-gateway"
         api:
-                image: lordvidex/gomoney-api:0.2
+                image: lordvidex/gomoney-api:0.3
                 secrets:
                         - gomoney_redis_url
                         - gomoney_symmetric_key
                 environment:
-                        - GRPC_SERVER=server-dev:8080
+                        - GRPC_SERVER=server:8080
                         - REDIS_URL_FILE=/run/secrets/gomoney_redis_url
+                        - APP_ENV=production
                         - SYMMETRIC_KEY_FILE=/run/secrets/gomoney_symmetric_key
-                        - SWAGGER_HOST=http://37.46.128.188/
-                        - SWAGGER_BASE_PATH=/gomoney/api
                 ports:
-                        - "8003:8080"
+                        - "127.0.0.1:8003:8080"
                 depends_on:
                         - server
                 extra_hosts:

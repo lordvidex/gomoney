@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"log"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/lordvidex/gomoney/api/docs"
@@ -46,15 +49,13 @@ func (h *router) setupRoutes() {
 	api.Get("/transactions/", auth, h.wrap(GetTransactions))
 }
 
-func (h *router) setupSwagger() {
-	config := config.New()
-
-	docs.SwaggerInfo.Host = config.Get("SWAGGER_HOST")
+func (h *router) setupSwagger(c *config.Config) {
+	docs.SwaggerInfo.Host = c.Get("SWAGGER_HOST")
 	if docs.SwaggerInfo.Host == "" {
 		docs.SwaggerInfo.Host = "localhost:8000"
 	}
 
-	docs.SwaggerInfo.BasePath = config.Get("SWAGGER_BASE_PATH")
+	docs.SwaggerInfo.BasePath = c.Get("SWAGGER_BASE_PATH")
 	if docs.SwaggerInfo.BasePath == "" {
 		docs.SwaggerInfo.BasePath = "/api"
 	}
@@ -66,10 +67,32 @@ func (h *router) Listen() error {
 	return h.f.Listen(":8080")
 }
 
-func New(app *application.Usecases) *router {
+func New(app *application.Usecases, c *config.Config) *router {
 	f := fiber.New()
 	r := &router{app, f}
 	r.setupRoutes()
-	r.setupSwagger()
+	r.setupSwagger(c)
+	if strings.ToLower(c.Get("APP_ENV")) == "production" {
+		log.Println("RUNNING IN PRODUCTION MODE: MOUNTING /gomoney/", "all routes without prefix will be redirected to /gomoney/<route>")
+		r.mount(("/gomoney"))
+	} else {
+		log.Println("RUNNING IN DEVELOPMENT MODE: NOT MOUNTING")
+	}
 	return r
+}
+
+func (r *router) mount(prefix string) {
+	if prefix == "" {
+		return
+	}
+	mnt := fiber.New()
+	// redirect all requests without prefix to the prefix
+	mnt.Use(func(ctx *fiber.Ctx) error {
+		if strings.HasPrefix(ctx.OriginalURL(), prefix) {
+			return ctx.Next()
+		}
+		return ctx.Redirect(prefix + ctx.OriginalURL())
+	})
+	mnt.Mount(prefix, r.f)
+	r.f = mnt
 }

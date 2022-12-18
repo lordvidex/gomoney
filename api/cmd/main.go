@@ -22,13 +22,13 @@ import (
 //	@contact.email	evans.dev99@gmail.com
 //	@contact.name	Evans Owamoyo
 
-//	@host						localhost:8000
-//	@BasePath					/api
+// @host						localhost:8000
+// @BasePath					/api
 //
-//	@securityDefinitions.apikey	bearerAuth
-//	@in							header
-//	@name						Authorization
-//	@description				Bearer <token>
+// @securityDefinitions.apikey	bearerAuth
+// @in							header
+// @name						Authorization
+// @description				Bearer <token>
 func main() {
 	// read configs
 	c := config.New()
@@ -56,7 +56,7 @@ func main() {
 	app := application.New(userRepo, th, service, ph)
 
 	// drive application
-	restHandler := handlers.New(app)
+	restHandler := handlers.New(app, c)
 	if err = restHandler.Listen(); err != nil {
 		log.Fatal(err)
 	}
