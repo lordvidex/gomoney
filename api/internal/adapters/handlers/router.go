@@ -2,13 +2,19 @@ package handlers
 
 import (
 	"log"
+	"path"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/gofiber/swagger"
 	"github.com/lordvidex/gomoney/api/docs"
 	"github.com/lordvidex/gomoney/api/internal/application"
 	"github.com/lordvidex/gomoney/pkg/config"
+)
+
+const (
+	mountPrefix = "/gomoney"
 )
 
 type router struct {
@@ -59,8 +65,18 @@ func (h *router) setupSwagger(c *config.Config) {
 	if docs.SwaggerInfo.BasePath == "" {
 		docs.SwaggerInfo.BasePath = "/api"
 	}
-
-	h.f.Get("/docs/*", swagger.HandlerDefault) // documentations
+	h.f.Get("/docs/*", func(ctx *fiber.Ctx) error {
+		p := utils.CopyString(ctx.Params("*"))
+		switch p {
+		case "/", "":
+			prefix := strings.ReplaceAll(ctx.Route().Path, "*", "")
+			rr := path.Join(prefix, "index.html")
+			log.Println("Redirecting to ", rr)
+			return ctx.Redirect(rr)
+		default:
+			return swagger.HandlerDefault(ctx)
+		}
+	}) // documentations
 }
 
 func (h *router) Listen() error {
@@ -72,9 +88,9 @@ func New(app *application.Usecases, c *config.Config) *router {
 	r := &router{app, f}
 	r.setupRoutes()
 	r.setupSwagger(c)
-	if strings.ToLower(c.Get("APP_ENV")) == "production" {
-		log.Println("RUNNING IN PRODUCTION MODE: MOUNTING /gomoney/", "all routes without prefix will be redirected to /gomoney/<route>")
-		r.mount(("/gomoney"))
+	if isProd(c) {
+		log.Println("RUNNING IN PRODUCTION MODE: MOUNTING", mountPrefix, "all routes without prefix will be redirected to", mountPrefix, "/<route>")
+		r.mount(mountPrefix)
 	} else {
 		log.Println("RUNNING IN DEVELOPMENT MODE: NOT MOUNTING")
 	}
@@ -95,4 +111,8 @@ func (r *router) mount(prefix string) {
 	})
 	mnt.Mount(prefix, r.f)
 	r.f = mnt
+}
+
+func isProd(c *config.Config) bool {
+	return strings.ToLower(c.Get("APP_ENV")) == "production"
 }

@@ -55,6 +55,7 @@ services:
     environment:
       - GRPC_SERVER=server-dev:8080
       - REDIS_URL=${REDIS_URL}
+      - APP_ENV=production
       - SYMMETRIC_KEY=${SYMMETRIC_KEY}
     build:
       dockerfile: deployments/Dockerfile-api

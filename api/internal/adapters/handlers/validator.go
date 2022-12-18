@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	g "github.com/lordvidex/gomoney/pkg/gomoney"
-	"reflect"
-	"strings"
 )
 
 var validate = validator.New()
