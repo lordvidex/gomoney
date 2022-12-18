@@ -3,7 +3,18 @@ package application
 import (
 	"context"
 	"github.com/lordvidex/gomoney/api/internal/core"
+	g "github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/pkg/errors"
+)
+
+// -- errors --
+
+var (
+	ErrUserNotFound   = g.Err().WithCode(g.ErrNotFound).WithMessage("user does not exist")
+	ErrAssigningToken = g.Err().WithCode(g.ErrInternal).WithMessage("error assigning token")
+	ErrInvalidLogin   = g.Err().WithCode(g.ErrInvalidInput).WithMessage("invalid login credentials")
+	ErrInvalidToken   = g.Err().WithCode(g.ErrInvalidInput).WithMessage("token is invalid")
+	ErrUserDeleted    = g.Err().WithCode(g.ErrNotFound).WithMessage("user has been deleted")
 )
 
 // ----------- User login Command ------------

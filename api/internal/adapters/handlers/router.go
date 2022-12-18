@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
+	_ "github.com/lordvidex/gomoney/api/docs"
 	"github.com/lordvidex/gomoney/api/internal/application"
 )
 
@@ -19,6 +21,8 @@ func (h *router) wrap(uc UseCaseHandler) func(*fiber.Ctx) error {
 }
 
 func (h *router) setupRoutes() {
+	h.f.Get("/docs/*", swagger.HandlerDefault) // documentations
+
 	api := h.f.Group("/api")
 	auth := h.wrap(AuthMiddleware)
 

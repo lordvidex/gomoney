@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/api/internal/application"
@@ -16,6 +18,10 @@ var (
 	ErrServiceCall = errors.New("call to service failed")
 )
 
+type grpcstatus interface {
+	GRPCStatus() *status.Status
+}
+
 type service struct {
 	ucl lgrpc.UserServiceClient
 	acl lgrpc.AccountServiceClient
@@ -28,6 +34,11 @@ func (s service) CreateUser(ctx context.Context, param application.CreateUserPar
 		Phone: param.Phone,
 	})
 	if err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			return "", gomoney.
+				Err(gomoney.ErrAlreadyExists).
+				WithMessage(err.(grpcstatus).GRPCStatus().Message())
+		}
 		return "", errors.Wrap(err, ErrServiceCall.Error())
 	}
 	return id.GetId(), nil

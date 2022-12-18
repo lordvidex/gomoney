@@ -31,6 +31,9 @@ func (h *Handler) CreateUser(ctx context.Context, u *pb.User) (*pb.StringID, err
 		Name:  u.Name,
 	})
 	if err != nil {
+		if gomoney.Err(gomoney.ErrAlreadyExists).IsCode(err) {
+			return nil, status.Error(codes.AlreadyExists, err.Error())
+		}
 		return nil, err
 	}
 	return &pb.StringID{Id: id.String()}, nil

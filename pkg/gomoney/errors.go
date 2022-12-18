@@ -27,7 +27,7 @@ func (e ErrType) String() string {
 
 const (
 	ErrInternal ErrType = iota
-	ErrNotFound 
+	ErrNotFound
 	ErrAlreadyExists
 	ErrInvalidInput
 )
@@ -37,11 +37,13 @@ type Error struct {
 	Messages []string
 }
 
-
-// Err is a factory method to create an Error instance with the code set to 
+// Err is a factory method to create an Error instance with the code set to
 // ErrInternal and no messages.
-func Err() Error {
-	return Error{Code: ErrInternal}
+func Err(code ...ErrType) Error {
+	if len(code) == 0 {
+		return Error{Code: ErrInternal}
+	}
+	return Error{Code: code[0]}
 }
 
 // Is returns true if the Error instance is equal to the error passed in by
@@ -96,5 +98,5 @@ func (e Error) WithCode(code ErrType) Error {
 }
 
 func (e Error) Error() string {
-	return e.Code.String() + ": [" + strings.Join(e.Messages, ", ") + "]"
+	return strings.Join(e.Messages, ", ")
 }

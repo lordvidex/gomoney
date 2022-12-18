@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"bytes"
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -31,10 +29,4 @@ func TestMain(m *testing.M) {
 	mr = New(uc)
 
 	os.Exit(m.Run())
-}
-
-func encodeBody(body interface{}) (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(body)
-	return &buf, err
 }

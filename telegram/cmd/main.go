@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// @gomoni_bot
+//	@gomoni_bot
 
 func main() {
 	// read configs

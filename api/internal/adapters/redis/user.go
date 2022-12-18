@@ -29,6 +29,9 @@ func (r *userRepo) GetUserFromPhone(ctx context.Context, phone string) (*core.Ap
 	// get user from db
 	user, err := r.Get(ctx, phone).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, application.ErrUserNotFound
+		}
 		return nil, errors.Wrap(err, "failed to get user")
 	}
 

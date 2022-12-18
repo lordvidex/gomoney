@@ -15,6 +15,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+//	@title			GoMoni API
+//	@version		1.0
+//	@description	This is the API for GoMoni, a simple money management application.
+//
+//	@contact.email	evans.dev99@gmail.com
+//	@contact.name	Evans Owamoyo
+
+//	@host		localhost:8000
+//	@BasePath	/api
 func main() {
 	// read configs
 	c := config.New()

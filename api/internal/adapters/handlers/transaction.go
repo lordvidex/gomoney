@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	"github.com/lordvidex/gomoney/api/internal/application"
 )
 
 type createTransfer struct {
 	FromAccountID int64   `json:"from_account_id" validate:"required,number,min=1"`
-	ToAccountID   int64   `json:"to_account_id" validate:"required,number,min=1"`
+	ToAccountID   int64   `json:"to_account_id" validate:"required,number,min=1,nefield=FromAccountID"`
 	Amount        float64 `json:"amount" validate:"required,number,min=1"`
 }
 
@@ -23,6 +24,11 @@ func CreateTransfers(uc *application.Usecases, ctx *fiber.Ctx) error {
 	err = parseBody(ctx, &req)
 	if err != nil {
 		return err
+	}
+
+	// validate body request
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
 	_, err = uc.Transfer.Handle(ctx.UserContext(), application.CreateTransferParam{
@@ -57,6 +63,11 @@ func CreateDeposit(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return err
 	}
 
+	// validate body request
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
+	}
+
 	_, err = uc.Deposit.Handle(ctx.UserContext(), application.DepositParam{
 		ActorID: user.ID.String(),
 		ToID:    req.ToAccountID,
@@ -87,6 +98,11 @@ func CreateWithdraw(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return err
 	}
 
+	// validate body request
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
+	}
+
 	_, err = uc.Withdraw.Handle(ctx.UserContext(), application.WithdrawParam{
 		ActorID: user.ID.String(),
 		FromID:  req.FromAccountID,
@@ -115,7 +131,7 @@ func GetTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 }
 
 type getAccountTransferParam struct {
-	AccountID int64 `uri:"account_id" validate:"required,number,min=1"`
+	AccountID int64 `params:"id" validate:"required,number,min=1"`
 }
 
 func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -127,9 +143,14 @@ func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 
 	// Parse request body
 	var req getAccountTransferParam
-	err = parseUri(ctx, &req)
+	err = parseParams(ctx, &req)
 	if err != nil {
 		return err
+	}
+
+	// validate body request
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.Errs(errs...))
 	}
 
 	transactions, err := uc.GetAccountTransactions.Handle(ctx.UserContext(), application.UserWithAccount{
@@ -140,5 +161,6 @@ func GetAccountTransactions(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return setCtxBodyError(ctx, err)
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"transactions": transactions})
+	return ctx.Status(fiber.StatusOK).
+		JSON(response.Success(transactions))
 }

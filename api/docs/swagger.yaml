@@ -1,0 +1,171 @@
+basePath: /api
+definitions:
+  handlers.UserDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  handlers.createUserReq:
+    properties:
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    - password
+    - phone
+    type: object
+  handlers.createUserRes:
+    properties:
+      message:
+        type: string
+      user_id:
+        type: string
+    type: object
+  handlers.loginUserReq:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+    required:
+    - password
+    - phone
+    type: object
+  handlers.loginUserRes:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/handlers.UserDTO'
+    type: object
+  response.Error:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  response.JSON:
+    properties:
+      success:
+        type: boolean
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: evans.dev99@gmail.com
+    name: Evans Owamoyo
+  description: This is the API for GoMoni, a simple money management application.
+  title: GoMoni API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login with phone and password
+      parameters:
+      - description: login user request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.loginUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.loginUserRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      summary: login with phone and password
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: create user request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createUserReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.createUserRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      summary: register a new user
+      tags:
+      - auth
+swagger: "2.0"
