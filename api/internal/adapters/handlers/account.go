@@ -14,6 +14,15 @@ import (
 // 	Balance     float64          `json:"balance"`
 // }
 
+// GetAccounts godoc
+//
+//	@Summary		get all user accounts
+//	@Description	returns all the accounts for the currently logged in user
+//	@Tags			accounts
+//	@Produce		json
+//	@Success		200	{object}	response.JSON{data=[]gomoney.Account}
+//	@Security		bearerAuth
+//	@Router			/accounts [get]
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	// get the user from the context
 	u, err := userFromCtx(ctx)

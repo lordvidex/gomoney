@@ -19,6 +19,46 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/accounts": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "returns all the accounts for the currently logged in user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "get all user accounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.JSON"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gomoney.Account"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "login with phone and password",
@@ -196,6 +236,45 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gomoney.Account": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "number"
+                },
+                "currency": {
+                    "$ref": "#/definitions/gomoney.Currency"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isBlocked": {
+                    "type": "boolean"
+                },
+                "ownerID": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "gomoney.Currency": {
+            "type": "string",
+            "enum": [
+                "USD",
+                "RUB",
+                "NGN"
+            ],
+            "x-enum-varnames": [
+                "USD",
+                "RUB",
+                "NGN"
+            ]
+        },
         "handlers.UserDTO": {
             "type": "object",
             "properties": {
@@ -289,6 +368,14 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "bearerAuth": {
+            "description": "Bearer \u003ctoken\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

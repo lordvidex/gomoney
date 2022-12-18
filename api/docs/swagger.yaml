@@ -1,5 +1,32 @@
 basePath: /api
 definitions:
+  gomoney.Account:
+    properties:
+      balance:
+        type: number
+      currency:
+        $ref: '#/definitions/gomoney.Currency'
+      description:
+        type: string
+      id:
+        type: integer
+      isBlocked:
+        type: boolean
+      ownerID:
+        type: string
+      title:
+        type: string
+    type: object
+  gomoney.Currency:
+    enum:
+    - USD
+    - RUB
+    - NGN
+    type: string
+    x-enum-varnames:
+    - USD
+    - RUB
+    - NGN
   handlers.UserDTO:
     properties:
       id:
@@ -71,6 +98,28 @@ info:
   title: GoMoni API
   version: "1.0"
 paths:
+  /accounts:
+    get:
+      description: returns all the accounts for the currently logged in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gomoney.Account'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: get all user accounts
+      tags:
+      - accounts
   /login:
     post:
       consumes:
@@ -168,4 +217,10 @@ paths:
       summary: register a new user
       tags:
       - auth
+securityDefinitions:
+  bearerAuth:
+    description: Bearer <token>
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

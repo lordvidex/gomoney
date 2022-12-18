@@ -62,7 +62,7 @@ type createUserReq struct {
 	Phone    string `json:"phone" validate:"required,e164"`
 	Password string `json:"password" validate:"required,min=8"`
 	Name     string `json:"name" validate:"required"`
-} //	@name	a.createUserReq
+}
 
 type createUserRes struct {
 	ID      string `json:"user_id"`
