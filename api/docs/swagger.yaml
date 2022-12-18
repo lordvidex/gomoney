@@ -1,22 +1,5 @@
 basePath: /api
 definitions:
-  gomoney.Account:
-    properties:
-      balance:
-        type: number
-      currency:
-        $ref: '#/definitions/gomoney.Currency'
-      description:
-        type: string
-      id:
-        type: integer
-      isBlocked:
-        type: boolean
-      ownerID:
-        type: string
-      title:
-        type: string
-    type: object
   gomoney.Currency:
     enum:
     - USD
@@ -27,6 +10,43 @@ definitions:
     - USD
     - RUB
     - NGN
+  handlers.AccountDTO:
+    properties:
+      balance:
+        type: number
+      currency:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_blocked:
+        type: boolean
+      title:
+        type: string
+    type: object
+  handlers.TransactionDTO:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      from:
+        $ref: '#/definitions/handlers.AccountDTO'
+      id:
+        type: string
+      to:
+        $ref: '#/definitions/handlers.AccountDTO'
+    type: object
+  handlers.TransactionSummaryDTO:
+    properties:
+      account_id:
+        $ref: '#/definitions/handlers.AccountDTO'
+      transaction:
+        items:
+          $ref: '#/definitions/handlers.TransactionDTO'
+        type: array
+    type: object
   handlers.UserDTO:
     properties:
       id:
@@ -35,6 +55,61 @@ definitions:
         type: string
       phone:
         type: string
+    type: object
+  handlers.createAccountReq:
+    properties:
+      currency:
+        allOf:
+        - $ref: '#/definitions/gomoney.Currency'
+        enum:
+        - USD
+        - RUB
+        - NGN
+      description:
+        minLength: 5
+        type: string
+      title:
+        minLength: 5
+        type: string
+    required:
+    - currency
+    - description
+    - title
+    type: object
+  handlers.createAccountRes:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  handlers.createDeposit:
+    properties:
+      amount:
+        minimum: 1
+        type: number
+      to_account_id:
+        minimum: 1
+        type: integer
+    required:
+    - amount
+    - to_account_id
+    type: object
+  handlers.createTransfer:
+    properties:
+      amount:
+        minimum: 1
+        type: number
+      from_account_id:
+        minimum: 1
+        type: integer
+      to_account_id:
+        minimum: 1
+        type: integer
+    required:
+    - amount
+    - from_account_id
+    - to_account_id
     type: object
   handlers.createUserReq:
     properties:
@@ -56,6 +131,18 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  handlers.createWithdraw:
+    properties:
+      amount:
+        minimum: 1
+        type: number
+      from_account_id:
+        minimum: 1
+        type: integer
+    required:
+    - amount
+    - from_account_id
     type: object
   handlers.loginUserReq:
     properties:
@@ -100,7 +187,7 @@ info:
 paths:
   /accounts:
     get:
-      description: returns all the accounts for the currently logged in user
+      description: returns all the accounts for the currently logged-in user
       produces:
       - application/json
       responses:
@@ -112,12 +199,84 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/gomoney.Account'
+                    $ref: '#/definitions/handlers.AccountDTO'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
                   type: array
               type: object
       security:
       - bearerAuth: []
       summary: get all user accounts
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: creates a new account for the currently logged-in user
+      parameters:
+      - description: login user request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createAccountReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.createAccountRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: creates a new account for the currently logged-in user
       tags:
       - accounts
   /login:
@@ -217,6 +376,252 @@ paths:
       summary: register a new user
       tags:
       - auth
+  /transactions:
+    get:
+      description: get all accounts transactions for the logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.TransactionSummaryDTO'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: get all accounts transactions for the logged-in user
+      tags:
+      - transactions
+  /transactions/{id}:
+    get:
+      description: get one account transactions for the logged-in user by account
+        id
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TransactionSummaryDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: get one account transactions for the logged-in user by account id
+      tags:
+      - transactions
+  /transactions/deposit:
+    post:
+      consumes:
+      - application/json
+      description: deposit a specified amount to a user's account
+      parameters:
+      - description: create deposit request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createDeposit'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TransactionDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: deposit a specified amount to a user's account
+      tags:
+      - transactions
+  /transactions/transfer:
+    post:
+      consumes:
+      - application/json
+      description: transfer a specified amount from a user's account to another account
+      parameters:
+      - description: create transfer request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createTransfer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TransactionDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: transfer a specified amount from a user's account to another account
+      tags:
+      - transactions
+  /transactions/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: withdraw a specified amount from a user's account
+      parameters:
+      - description: create withdraw request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createWithdraw'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TransactionDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: withdraw a specified amount from a user's account
+      tags:
+      - transactions
 securityDefinitions:
   bearerAuth:
     description: Bearer <token>

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -71,18 +72,18 @@ func (s service) GetAccounts(ctx context.Context, ID string) ([]gomoney.Account,
 	return accs, nil
 }
 
-func (s service) CreateAccount(ctx context.Context, userID string, acc *gomoney.Account) (int64, error) {
+func (s service) CreateAccount(ctx context.Context, param application.CreateAccountParam) (int64, error) {
 	accID, err := s.acl.CreateAccount(ctx, &lgrpc.ManyAccounts{
 		Owner: &lgrpc.StringID{
-			Id: userID,
+			Id: param.UserID.String(),
 		},
 		Accounts: []*lgrpc.Account{
 			{
-				Title:       acc.Title,
-				Description: acc.Description,
-				Balance:     acc.Balance,
-				Currency:    lgrpc.Currency(lgrpc.Currency_value[string(acc.Currency)]),
-				IsBlocked:   acc.IsBlocked,
+				Title:       param.Title,
+				Description: param.Description,
+				Balance:     0,
+				Currency:    lgrpc.Currency(lgrpc.Currency_value[string(param.Currency)]),
+				IsBlocked:   false,
 			},
 		},
 	})

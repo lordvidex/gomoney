@@ -2,25 +2,28 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	"github.com/lordvidex/gomoney/api/internal/application"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
 
-// type accountResponse struct {
-// 	ID          int64            `json:"id"`
-// 	Title       string           `json:"title"`
-// 	Description string           `json:"description"`
-// 	Currency    gomoney.Currency `json:"currency"`
-// 	Balance     float64          `json:"balance"`
-// }
+type AccountDTO struct {
+	ID          *int64   `json:"id"`
+	Title       *string  `json:"title"`
+	Description *string  `json:"description"`
+	Currency    *string  `json:"currency"`
+	Balance     *float64 `json:"balance"`
+	IsBlocked   *bool    `json:"is_blocked"`
+}
 
 // GetAccounts godoc
 //
 //	@Summary		get all user accounts
-//	@Description	returns all the accounts for the currently logged in user
+//	@Description	returns all the accounts for the currently logged-in user
 //	@Tags			accounts
 //	@Produce		json
-//	@Success		200	{object}	response.JSON{data=[]gomoney.Account}
+//	@Success		200		{object}	response.JSON{data=[]AccountDTO}
+//	@Failure		400,500	{object}	response.JSON{error=[]response.Error}
 //	@Security		bearerAuth
 //	@Router			/accounts [get]
 func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
@@ -33,14 +36,12 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 		UserID: u.ID,
 	})
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return setCtxBodyError(ctx, err)
 	}
-	// res := make([]accountResponse, len(accounts))
-	// for i, acc := range accounts {
-	// 	res[i] = accToResponse(acc)
-	// }
+	res := make([]*AccountDTO, len(accounts))
+	for i, acc := range accounts {
+		res[i] = parseAccount(&acc)
+	}
 	return ctx.Status(fiber.StatusOK).JSON(accounts)
 }
 
@@ -50,6 +51,23 @@ type createAccountReq struct {
 	Currency    gomoney.Currency `json:"currency" validate:"required,oneof=USD RUB NGN"`
 }
 
+type createAccountRes struct {
+	ID      int64  `json:"id"`
+	Message string `json:"message"`
+}
+
+// CreateAccount godoc
+//
+//	@Summary		creates a new account for the currently logged-in user
+//	@Description	creates a new account for the currently logged-in user
+//	@Tags			accounts
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		createAccountReq	true	"login user request"
+//	@Success		200		{object}	response.JSON{data=createAccountRes}
+//	@Failure		400,500	{object}	response.JSON{error=[]response.Error}
+//	@Security		bearerAuth
+//	@Router			/accounts [post]
 func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 	// get the user from the context
 	u, err := userFromCtx(ctx)
@@ -68,33 +86,14 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"errors": errs})
 	}
 
+	// call create account service
 	id, err := uc.CreateAccount.Handle(ctx.UserContext(), application.CreateAccountParam{
-		UserID: u.ID,
-		Account: gomoney.Account{
-			Title:       req.Title,
-			Description: req.Description,
-			Currency:    req.Currency,
-		},
+		UserID: u.ID, Title: req.Title, Description: req.Description, Currency: req.Currency,
 	})
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return setCtxBodyError(ctx, err)
 	}
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Account successfully created",
-		"data": map[string]int64{
-			"id": id,
-		},
-	})
-}
 
-// func accToResponse(acc gomoney.Account) accountResponse {
-// 	return accountResponse{
-// 		ID:          acc.Id,
-// 		Title:       acc.Title,
-// 		Description: acc.Description,
-// 		Currency:    acc.Currency,
-// 		Balance:     acc.Balance,
-// 	}
-// }
+	return ctx.Status(fiber.StatusOK).
+		JSON(response.Success(createAccountRes{ID: id, Message: "Account created successfully"}))
+}

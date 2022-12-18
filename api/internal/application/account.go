@@ -9,8 +9,10 @@ import (
 // ------------------ Create new user account ------------------
 
 type CreateAccountParam struct {
-	UserID  uuid.UUID
-	Account gomoney.Account
+	UserID      uuid.UUID
+	Title       string
+	Description string
+	Currency    gomoney.Currency
 }
 
 type CreateAccountCommand interface {
@@ -26,7 +28,7 @@ func NewCreateAccountCommand(srv Service) CreateAccountCommand {
 }
 
 func (c *createAccountImpl) Handle(ctx context.Context, param CreateAccountParam) (int64, error) {
-	return c.srv.CreateAccount(ctx, param.UserID.String(), &param.Account)
+	return c.srv.CreateAccount(ctx, param)
 }
 
 // ------------------ View transfers for an account ------------------
