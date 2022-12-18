@@ -31,14 +31,20 @@ Data server is responsible for handling all the interactions with the database.
 
 
 ## Build project 
-To build the docker image of the project run
+To build the docker image first set the env vars or use the default values by using the following command
+```bash
+cp .env.example .env
+cp .db.env.example .db.env
+```
+
+Then build the docker image using the following command
 ```bash
 docker-compose up
 ```
 
 ## RoadMap
 - [x] Build basic structure around hexagonal architecture
-- [ ] Complete Account implementation on grpc server
-- [ ] Complete telegram bot with functions
-- [ ] Complete REST API
-- [ ] Host the application
+- [x] Complete Account implementation on grpc server
+- [x] Complete telegram bot with functions
+- [x] Complete REST API
+- [x] Host the application

@@ -210,18 +210,18 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateAccount mocks base method.
-func (m *MockService) CreateAccount(ctx context.Context, userID string, account *gomoney.Account) (int64, error) {
+func (m *MockService) CreateAccount(ctx context.Context, param application.CreateAccountParam) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAccount", ctx, userID, account)
+	ret := m.ctrl.Call(m, "CreateAccount", ctx, param)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAccount indicates an expected call of CreateAccount.
-func (mr *MockServiceMockRecorder) CreateAccount(ctx, userID, account interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) CreateAccount(ctx, param interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccount", reflect.TypeOf((*MockService)(nil).CreateAccount), ctx, userID, account)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccount", reflect.TypeOf((*MockService)(nil).CreateAccount), ctx, param)
 }
 
 // CreateUser mocks base method.

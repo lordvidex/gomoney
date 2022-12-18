@@ -28,7 +28,7 @@ type Service interface {
 	GetUserByPhone(ctx context.Context, phone string) (*core.ApiUser, error)
 
 	GetAccounts(ctx context.Context, ID string) ([]gomoney.Account, error)
-	CreateAccount(ctx context.Context, userID string, account *gomoney.Account) (int64, error)
+	CreateAccount(ctx context.Context, param CreateAccountParam) (int64, error)
 
 	Transfer(ctx context.Context, param CreateTransferParam) (*gomoney.Transaction, error)
 	Deposit(ctx context.Context, param DepositParam) (*gomoney.Transaction, error)
