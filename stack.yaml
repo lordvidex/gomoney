@@ -38,6 +38,8 @@ services:
                         - GRPC_SERVER=server-dev:8080
                         - REDIS_URL_FILE=/run/secrets/gomoney_redis_url
                         - SYMMETRIC_KEY_FILE=/run/secrets/gomoney_symmetric_key
+                        - SWAGGER_HOST=http://37.46.128.188/
+                        - SWAGGER_BASE_PATH=/gomoney/api
                 ports:
                         - "8003:8080"
                 depends_on:
