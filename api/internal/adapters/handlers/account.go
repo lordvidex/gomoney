@@ -42,7 +42,7 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	for i, acc := range accounts {
 		res[i] = parseAccount(&acc)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(accounts)
+	return ctx.Status(fiber.StatusOK).JSON(response.Success(res))
 }
 
 type createAccountReq struct {
