@@ -239,6 +239,20 @@ func (mr *MockServiceMockRecorder) CreateUser(ctx, param interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockService)(nil).CreateUser), ctx, param)
 }
 
+// DeleteAccount mocks base method.
+func (m *MockService) DeleteAccount(ctx context.Context, param application.DeleteAccountParam) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAccount", ctx, param)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAccount indicates an expected call of DeleteAccount.
+func (mr *MockServiceMockRecorder) DeleteAccount(ctx, param interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAccount", reflect.TypeOf((*MockService)(nil).DeleteAccount), ctx, param)
+}
+
 // Deposit mocks base method.
 func (m *MockService) Deposit(ctx context.Context, param application.DepositParam) (*gomoney.Transaction, error) {
 	m.ctrl.T.Helper()

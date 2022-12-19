@@ -22,9 +22,6 @@ import (
 //	@contact.email	evans.dev99@gmail.com
 //	@contact.name	Evans Owamoyo
 
-//	@host						localhost:8000
-//	@BasePath					/api
-//
 //	@securityDefinitions.apikey	bearerAuth
 //	@in							header
 //	@name						Authorization

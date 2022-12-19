@@ -2,9 +2,10 @@ package application
 
 import (
 	"context"
+	"time"
+
 	"github.com/lordvidex/gomoney/api/internal/core"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
-	"time"
 )
 
 type UserRepository interface {
@@ -29,6 +30,7 @@ type Service interface {
 
 	GetAccounts(ctx context.Context, ID string) ([]gomoney.Account, error)
 	CreateAccount(ctx context.Context, param CreateAccountParam) (int64, error)
+	DeleteAccount(ctx context.Context, param DeleteAccountParam) error
 
 	Transfer(ctx context.Context, param CreateTransferParam) (*gomoney.Transaction, error)
 	Deposit(ctx context.Context, param DepositParam) (*gomoney.Transaction, error)

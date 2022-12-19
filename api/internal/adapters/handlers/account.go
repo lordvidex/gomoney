@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	"github.com/lordvidex/gomoney/api/internal/application"
@@ -38,9 +39,9 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	if err != nil {
 		return setCtxBodyError(ctx, err)
 	}
-	res := make([]*AccountDTO, len(accounts))
+	res := make([]AccountDTO, len(accounts))
 	for i, acc := range accounts {
-		res[i] = parseAccount(&acc)
+		res[i] = *parseAccount(&acc)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(response.Success(res))
 }
@@ -96,4 +97,45 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).
 		JSON(response.Success(createAccountRes{ID: id, Message: "Account created successfully"}))
+}
+
+// DeleteAccount godoc
+//
+//	@Summary		deletes an account for the currently logged-in user
+//	@Description	deletes an account for the currently logged-in user
+//	@Tags			accounts
+//	@Produce		json
+//	@Param			id		path		int64	true	"account id"
+//	@Success		200		{object}	response.JSON{data=string}
+//	@Failure		400,500	{object}	response.JSON{error=[]response.Error}
+//	@Security		bearerAuth
+//	@Router			/accounts/{id} [delete]
+func DeleteAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
+	// get the user from the context
+	u, err := userFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+
+	// parse the request body
+	var req int64
+	if err = parseParams(ctx, &req); err != nil {
+		return err
+	}
+
+	if req <= 0 {
+		return ctx.Status(fiber.StatusBadRequest).
+			JSON(response.ErrM("invalid account id, value must be greater than 0"))
+	}
+
+	// call create account service
+	err = uc.DeleteAccount.Handle(ctx.UserContext(), application.DeleteAccountParam{
+		UserID: u.ID.String(), AccountID: req,
+	})
+	if err != nil {
+		return setCtxBodyError(ctx, err)
+	}
+
+	return ctx.Status(fiber.StatusOK).
+		JSON(response.Success(fmt.Sprintf("Account `%d` deleted successfully", req)))
 }

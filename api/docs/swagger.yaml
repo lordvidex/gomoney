@@ -1,4 +1,3 @@
-basePath: /api
 definitions:
   gomoney.Currency:
     enum:
@@ -176,7 +175,6 @@ definitions:
       success:
         type: boolean
     type: object
-host: localhost:8000
 info:
   contact:
     email: evans.dev99@gmail.com
@@ -277,6 +275,54 @@ paths:
       security:
       - bearerAuth: []
       summary: creates a new account for the currently logged-in user
+      tags:
+      - accounts
+  /accounts/{id}:
+    delete:
+      description: deletes an account for the currently logged-in user
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.JSON'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/response.Error'
+                  type: array
+              type: object
+      security:
+      - bearerAuth: []
+      summary: deletes an account for the currently logged-in user
       tags:
       - accounts
   /login:

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 )
@@ -51,4 +52,25 @@ func NewGetAccountsQuery(srv Service) GetAccountsQuery {
 
 func (v *getAccountsImpl) Handle(ctx context.Context, param GetAccountsParam) ([]gomoney.Account, error) {
 	return v.srv.GetAccounts(ctx, param.UserID.String())
+}
+
+type DeleteAccountParam struct {
+	UserID    string
+	AccountID int64
+}
+
+type DeleteAccountCommand interface {
+	Handle(context.Context, DeleteAccountParam) error
+}
+
+type deleteAccountImpl struct {
+	srv Service
+}
+
+func NewDeleteAccountCommand(srv Service) DeleteAccountCommand {
+	return &deleteAccountImpl{srv}
+}
+
+func (c *deleteAccountImpl) Handle(ctx context.Context, param DeleteAccountParam) error {
+	return c.srv.DeleteAccount(ctx, param)
 }

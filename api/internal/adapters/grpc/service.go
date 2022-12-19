@@ -93,6 +93,17 @@ func (s service) CreateAccount(ctx context.Context, param application.CreateAcco
 	return accID.GetId(), nil
 }
 
+func (s service) DeleteAccount(ctx context.Context, param application.DeleteAccountParam) error {
+	_, err := s.acl.DeleteAccount(ctx, &lgrpc.UserWithAccount{
+		User:    &lgrpc.StringID{Id: param.UserID},
+		Account: &lgrpc.IntID{Id: param.AccountID},
+	})
+	if err != nil {
+		return errors.Wrap(err, ErrServiceCall.Error())
+	}
+	return nil
+}
+
 func (s service) Transfer(ctx context.Context, param application.CreateTransferParam) (*gomoney.Transaction, error) {
 	transaction, err := s.tcl.Transfer(ctx, &lgrpc.TransactionParam{
 		To:     &param.ToID,

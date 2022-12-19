@@ -44,6 +44,7 @@ func (h *router) setupRoutes() {
 	// - Accounts EndPoint
 	api.Get("/accounts", auth, h.wrap(GetAccounts))
 	api.Post("/accounts", auth, h.wrap(CreateAccount))
+	api.Post("/accounts/:id", auth, h.wrap(DeleteAccount))
 
 	// - Transactions EndPoint
 	api.Post("/transactions/transfer", auth, h.wrap(CreateTransfers))
@@ -63,7 +64,7 @@ func (h *router) setupSwagger(c *config.Config) {
 
 	docs.SwaggerInfo.BasePath = c.Get("SWAGGER_BASE_PATH")
 	if docs.SwaggerInfo.BasePath == "" {
-		docs.SwaggerInfo.BasePath = "/api"
+		docs.SwaggerInfo.BasePath = "/gomoney/api"
 	}
 	h.f.Get("/docs/*", func(ctx *fiber.Ctx) error {
 		p := utils.CopyString(ctx.Params("*"))
