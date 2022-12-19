@@ -44,7 +44,7 @@ func (h *router) setupRoutes() {
 	// - Accounts EndPoint
 	api.Get("/accounts", auth, h.wrap(GetAccounts))
 	api.Post("/accounts", auth, h.wrap(CreateAccount))
-	api.Post("/accounts/:id", auth, h.wrap(DeleteAccount))
+	api.Delete("/accounts/:id", auth, h.wrap(DeleteAccount))
 
 	// - Transactions EndPoint
 	api.Post("/transactions/transfer", auth, h.wrap(CreateTransfers))

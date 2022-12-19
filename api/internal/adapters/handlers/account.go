@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	"github.com/lordvidex/gomoney/api/internal/application"
@@ -39,9 +41,9 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	if err != nil {
 		return setCtxBodyError(ctx, err)
 	}
-	res := make([]AccountDTO, len(accounts))
+	res := make([]*AccountDTO, len(accounts))
 	for i, acc := range accounts {
-		res[i] = *parseAccount(&acc)
+		res[i] = parseAccount(&acc)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(response.Success(res))
 }
@@ -99,6 +101,10 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 		JSON(response.Success(createAccountRes{ID: id, Message: "Account created successfully"}))
 }
 
+type deleteAccountReq struct {
+	ID int64 `params:"id" validate:"required,number,min=1"`
+}
+
 // DeleteAccount godoc
 //
 //	@Summary		deletes an account for the currently logged-in user
@@ -118,21 +124,21 @@ func DeleteAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 	}
 
 	// parse the request body
-	var req int64
+	var req deleteAccountReq
 	if err = parseParams(ctx, &req); err != nil {
 		return err
 	}
 
-	if req <= 0 {
-		return ctx.Status(fiber.StatusBadRequest).
-			JSON(response.ErrM("invalid account id, value must be greater than 0"))
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.Errs(errs...))
 	}
 
 	// call create account service
 	err = uc.DeleteAccount.Handle(ctx.UserContext(), application.DeleteAccountParam{
-		UserID: u.ID.String(), AccountID: req,
+		UserID: u.ID.String(), AccountID: req.ID,
 	})
 	if err != nil {
+		log.Println(err)
 		return setCtxBodyError(ctx, err)
 	}
 

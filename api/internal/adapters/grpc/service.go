@@ -66,7 +66,7 @@ func (s service) GetAccounts(ctx context.Context, ID string) ([]gomoney.Account,
 	}
 	accs := make([]gomoney.Account, len(acc.Accounts))
 	for i, acci := range acc.Accounts {
-		accs[i] = *mapPAccToAcc(acci)
+		accs[i] = *mapPbAccToAcc(acci)
 		accs[i].OwnerID = uuid.MustParse(ID)
 	}
 	return accs, nil
@@ -116,7 +116,7 @@ func (s service) Transfer(ctx context.Context, param application.CreateTransferP
 	if err != nil {
 		return nil, errors.Wrap(err, ErrServiceCall.Error())
 	}
-	return mapPTxToTx(transaction), nil
+	return mapPbTxToTx(transaction), nil
 }
 
 func (s service) Deposit(ctx context.Context, param application.DepositParam) (*gomoney.Transaction, error) {
@@ -130,7 +130,7 @@ func (s service) Deposit(ctx context.Context, param application.DepositParam) (*
 	if err != nil {
 		return nil, errors.Wrap(err, ErrServiceCall.Error())
 	}
-	return mapPTxToTx(transaction), nil
+	return mapPbTxToTx(transaction), nil
 }
 
 func (s service) Withdraw(ctx context.Context, param application.WithdrawParam) (*gomoney.Transaction, error) {
@@ -144,7 +144,7 @@ func (s service) Withdraw(ctx context.Context, param application.WithdrawParam) 
 	if err != nil {
 		return nil, errors.Wrap(err, ErrServiceCall.Error())
 	}
-	return mapPTxToTx(transaction), nil
+	return mapPbTxToTx(transaction), nil
 }
 
 func (s service) GetTransactionSummary(ctx context.Context, userID string) ([]gomoney.TransactionSummary, error) {
@@ -154,19 +154,16 @@ func (s service) GetTransactionSummary(ctx context.Context, userID string) ([]go
 	}
 
 	accs, err := s.GetAccounts(ctx, userID)
-	m := make(map[int64]*gomoney.Account)
-	for _, acc := range accs {
-		m[acc.Id] = &acc
-	}
-
 	if err != nil {
 		return nil, errors.Wrap(err, ErrServiceCall.Error())
 	}
 
+	m := mapAccountsIntoMap(accs)
 	txs := make([]gomoney.TransactionSummary, len(transactions.Transactions))
 	for i, tx := range transactions.Transactions {
-		txs[i] = mapPTxSummaryToTxSummary(tx, m)
+		txs[i] = mapPbTxSummaryToTxSummary(tx, m)
 	}
+
 	return txs, nil
 }
 
@@ -180,18 +177,15 @@ func (s service) GetTransactions(ctx context.Context, param application.UserWith
 	}
 
 	accs, err := s.GetAccounts(ctx, param.UserID)
-	m := make(map[int64]*gomoney.Account)
-	for _, acc := range accs {
-		m[acc.Id] = &acc
-	}
-
 	if err != nil {
 		return gomoney.TransactionSummary{}, errors.Wrap(err, ErrServiceCall.Error())
 	}
-	return mapPTxSummaryToTxSummary(accTx, m), nil
+
+	m := mapAccountsIntoMap(accs)
+	return mapPbTxSummaryToTxSummary(accTx, m), nil
 }
 
-func mapPAccToAcc(acc *lgrpc.Account) *gomoney.Account {
+func mapPbAccToAcc(acc *lgrpc.Account) *gomoney.Account {
 	if acc == nil {
 		return nil
 	}
@@ -205,28 +199,37 @@ func mapPAccToAcc(acc *lgrpc.Account) *gomoney.Account {
 	}
 }
 
-func mapPTxToTx(t *lgrpc.Transaction) *gomoney.Transaction {
+func mapPbTxToTx(t *lgrpc.Transaction) *gomoney.Transaction {
 	if t == nil {
 		return nil
 	}
 	return &gomoney.Transaction{
 		ID:      uuid.MustParse(t.GetId().GetId()),
-		From:    mapPAccToAcc(t.GetFrom()),
-		To:      mapPAccToAcc(t.GetTo()),
+		From:    mapPbAccToAcc(t.GetFrom()),
+		To:      mapPbAccToAcc(t.GetTo()),
 		Type:    gomoney.TransactionType(t.GetType()),
 		Amount:  t.GetAmount(),
 		Created: t.GetCreatedAt().AsTime(),
 	}
 }
 
-func mapPTxSummaryToTxSummary(t *lgrpc.AccountTransactions, m map[int64]*gomoney.Account) gomoney.TransactionSummary {
+func mapPbTxSummaryToTxSummary(t *lgrpc.AccountTransactions, m map[int64]gomoney.Account) gomoney.TransactionSummary {
 	var accTx gomoney.TransactionSummary
-	accTx.Account = m[t.Account.Id]
+	temp := m[t.Account.Id]
+	accTx.Account = &temp
 	accTx.Transactions = make([]gomoney.Transaction, len(t.Transactions))
 	for i, tx := range t.Transactions {
-		accTx.Transactions[i] = *mapPTxToTx(tx)
+		accTx.Transactions[i] = *mapPbTxToTx(tx)
 	}
 	return accTx
+}
+
+func mapAccountsIntoMap(accs []gomoney.Account) map[int64]gomoney.Account {
+	m := make(map[int64]gomoney.Account)
+	for _, acc := range accs {
+		m[acc.Id] = acc
+	}
+	return m
 }
 
 func New(conn grpc.ClientConnInterface) application.Service {

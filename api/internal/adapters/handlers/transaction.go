@@ -12,10 +12,11 @@ type TransactionDTO struct {
 	From      *AccountDTO `json:"from"`
 	Amount    *float64    `json:"amount"`
 	CreatedAt *string     `json:"created_at"`
+	Type      *string     `json:"type"`
 }
 
 type TransactionSummaryDTO struct {
-	AccountID   *AccountDTO      `json:"account_id"`
+	Account     *AccountDTO      `json:"account"`
 	Transaction []TransactionDTO `json:"transaction"`
 }
 
