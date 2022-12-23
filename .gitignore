@@ -2,3 +2,6 @@
 **/.DS_Store
 *.env
 configs.json
+encore.gen.go
+encore.gen.cue
+/api/.encore

@@ -1050,10 +1050,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "token": {
+                    "description": "Token is the JWT token that can be used to authenticate for other routes.",
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/handlers.UserDTO"
+                    "description": "User is the user object for the user that was logged in.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.UserDTO"
+                        }
+                    ]
                 }
             }
         },

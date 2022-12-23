@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	mr   *router
+	mr   *Router
 	th   *mocks.MockTokenHelper
 	ph   *mocks.MockPasswordHasher
 	mur  *mocks.MockUserRepository

@@ -12,8 +12,10 @@ type loginUserReq struct {
 }
 
 type loginUserRes struct {
-	Token string  `json:"token"`
-	User  UserDTO `json:"user"`
+	// Token is the JWT token that can be used to authenticate for other routes.
+	Token string `json:"token"`
+	// User is the user object for the user that was logged in.
+	User UserDTO `json:"user"`
 }
 
 type UserDTO struct {

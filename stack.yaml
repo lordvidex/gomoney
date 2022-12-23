@@ -12,7 +12,7 @@ services:
                         restart_policy:
                                 condition: on-failure
                 ports:
-                        - "8002:8080"
+                        - "127.0.0.1:8002:8080"
                 extra_hosts:
                         - "host.docker.internal:host-gateway"
 
@@ -40,7 +40,7 @@ services:
                         - APP_ENV=production
                         - SYMMETRIC_KEY_FILE=/run/secrets/gomoney_symmetric_key
                 ports:
-                        - "8003:8080"
+                        - "127.0.0.1:8003:8080"
                 depends_on:
                         - server
                 extra_hosts:
