@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/lordvidex/gomoney/api/internal/adapters/handlers/response"
 	"github.com/lordvidex/gomoney/api/internal/application"
@@ -42,7 +45,7 @@ func GetAccounts(uc *application.Usecases, ctx *fiber.Ctx) error {
 	for i, acc := range accounts {
 		res[i] = parseAccount(&acc)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(accounts)
+	return ctx.Status(fiber.StatusOK).JSON(response.Success(res))
 }
 
 type createAccountReq struct {
@@ -96,4 +99,49 @@ func CreateAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).
 		JSON(response.Success(createAccountRes{ID: id, Message: "Account created successfully"}))
+}
+
+type deleteAccountReq struct {
+	ID int64 `params:"id" validate:"required,number,min=1"`
+}
+
+// DeleteAccount godoc
+//
+//	@Summary		deletes an account for the currently logged-in user
+//	@Description	deletes an account for the currently logged-in user
+//	@Tags			accounts
+//	@Produce		json
+//	@Param			id		path		int64	true	"account id"
+//	@Success		200		{object}	response.JSON{data=string}
+//	@Failure		400,500	{object}	response.JSON{error=[]response.Error}
+//	@Security		bearerAuth
+//	@Router			/accounts/{id} [delete]
+func DeleteAccount(uc *application.Usecases, ctx *fiber.Ctx) error {
+	// get the user from the context
+	u, err := userFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+
+	// parse the request body
+	var req deleteAccountReq
+	if err = parseParams(ctx, &req); err != nil {
+		return err
+	}
+
+	if errs := validateStruct(req); errs != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.Errs(errs...))
+	}
+
+	// call create account service
+	err = uc.DeleteAccount.Handle(ctx.UserContext(), application.DeleteAccountParam{
+		UserID: u.ID.String(), AccountID: req.ID,
+	})
+	if err != nil {
+		log.Println(err)
+		return setCtxBodyError(ctx, err)
+	}
+
+	return ctx.Status(fiber.StatusOK).
+		JSON(response.Success(fmt.Sprintf("Account `%d` deleted successfully", req)))
 }

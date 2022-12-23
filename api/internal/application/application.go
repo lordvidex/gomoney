@@ -12,6 +12,7 @@ func New(repo UserRepository, maker TokenHelper, service Service, hasher Passwor
 			Login:         NewLoginCommand(repo, maker, service, hasher),
 			CreateUser:    NewCreateUserCommand(repo, service, hasher),
 			CreateAccount: NewCreateAccountCommand(service),
+			DeleteAccount: NewDeleteAccountCommand(service),
 			Transfer:      NewTransferCommand(service),
 			Deposit:       NewDepositCommand(service),
 			Withdraw:      NewWithdrawCommand(service),
@@ -35,6 +36,7 @@ type Command struct {
 	Login         LoginCommand
 	CreateUser    CreateUserCommand
 	CreateAccount CreateAccountCommand
+	DeleteAccount DeleteAccountCommand
 	Transfer      TransferCommand
 	Deposit       DepositCommand
 	Withdraw      WithdrawCommand

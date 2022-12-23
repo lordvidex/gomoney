@@ -59,6 +59,18 @@ func strptr(s string) *string {
 	return &s
 }
 
+func int64ptr(i int64) *int64 {
+	return &i
+}
+
+func boolptr(b bool) *bool {
+	return &b
+}
+
+func float64ptr(f float64) *float64 {
+	return &f
+}
+
 func parseUser(u *gomoney.User) UserDTO {
 	return UserDTO{
 		ID:    strptr(u.ID.String()),
@@ -72,12 +84,12 @@ func parseAccount(a *gomoney.Account) *AccountDTO {
 		return nil
 	}
 	return &AccountDTO{
-		ID:          &a.Id,
+		ID:          int64ptr(a.Id),
 		Title:       strptr(a.Title),
 		Description: strptr(a.Description),
-		Balance:     &a.Balance,
+		Balance:     float64ptr(a.Balance),
 		Currency:    strptr(string(a.Currency)),
-		IsBlocked:   &a.IsBlocked,
+		IsBlocked:   boolptr(a.IsBlocked),
 	}
 }
 
@@ -86,8 +98,9 @@ func parseTransaction(t *gomoney.Transaction) TransactionDTO {
 		ID:        strptr(t.ID.String()),
 		To:        parseAccount(t.To),
 		From:      parseAccount(t.From),
-		Amount:    &t.Amount,
+		Amount:    float64ptr(t.Amount),
 		CreatedAt: strptr(t.Created.Format("2006-01-02 15:04:05")),
+		Type:      strptr(t.Type.String()),
 	}
 }
 
@@ -97,6 +110,7 @@ func parseTransactionSummary(s *gomoney.TransactionSummary) TransactionSummaryDT
 		txs[i] = parseTransaction(&t)
 	}
 	return TransactionSummaryDTO{
-		AccountID: parseAccount(s.Account),
+		Account: parseAccount(s.Account),
+		// Transaction: txs,
 	}
 }
