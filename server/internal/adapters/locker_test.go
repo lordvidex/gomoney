@@ -12,12 +12,12 @@ func TestConcurrentLocker_Lock(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
-		go func(x int) {
+		go func() {
 			defer wg.Done()
 			unlock := l.Lock("x", "y", "z")
 			time.Sleep(time.Second * 2) // let the other goroutines try to lock the same keys
 			defer unlock()
-		}(i)
+		}()
 	}
 
 	time.Sleep(time.Second * 2) // wait for the cleanup to run

@@ -2,20 +2,18 @@ package adapters
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"time"
 )
 
 type Locker struct {
-	// mx is used for locking mutexes for a lockgroup
 	mx sync.Map
-
-	// groups is for storing assigning a single item to a lockgroup
-	groups sync.Map
 }
 
 func NewLocker(c context.Context, cleanupFrequency time.Duration) *Locker {
 	l := &Locker{}
+
 	// regular cleanups
 	go l.cleanup(c, cleanupFrequency)
 	return l
@@ -43,35 +41,41 @@ func (l *Locker) cleanup(c context.Context, frequency time.Duration) {
 	}
 }
 
+// values passed to Lock must be of the same type [either all strings or all ints]
 func (l *Locker) Lock(x any, y ...any) func() {
-	items := append([]any{x}, y...)
-
-	for _, item := range items {
-		grp, ok := l.groups.Load(item)
-		if !ok {
-			continue
-		}
-		if grp == nil {
-			l.groups.Delete(item)
-			continue
-		}
-		cast, ok := grp.(*sync.Mutex)
-		if !ok {
-			continue
-		}
-		cast.Lock()   // waits for the group to be unlocked
-		cast.Unlock() // unlocks the group
-		continue
+	locks := make([]*sync.Mutex, len(y)+1)
+	// sort the keys to avoid deadlocks
+	arr := orderedLocks(append([]any{x}, y...))
+	sort.Sort(arr)
+	for i, key := range arr {
+		lock, _ := l.mx.LoadOrStore(key, &sync.Mutex{})
+		lock.(*sync.Mutex).Lock()
+		locks[i] = lock.(*sync.Mutex)
 	}
-	// locks := make([]*sync.Mutex, len(y)+1)
-	// for i, key := range append([]any{x}, y...) {
-	// 	lock, _ := l.mx.LoadOrStore(key, &sync.Mutex{})
-	// 	lock.(*sync.Mutex).Lock()
-	// 	locks[i] = lock.(*sync.Mutex)
-	// }
-	// return func() {
-	// 	for _, lock := range locks {
-	// 		lock.Unlock()
-	// 	}
-	// }
+	return func() {
+		for _, lock := range locks {
+			lock.Unlock()
+		}
+	}
+}
+
+type orderedLocks []any
+
+func (o orderedLocks) Len() int {
+	return len(o)
+}
+
+func (o orderedLocks) Less(i int, j int) bool {
+	switch o[i].(type) {
+	case string:
+		return o[i].(string) < o[j].(string)
+	case int:
+		return o[i].(int) < o[j].(int)
+	default:
+		panic("Lock key must either be strings or ints")
+	}
+}
+
+func (o orderedLocks) Swap(i int, j int) {
+	o[i], o[j] = o[j], o[i]
 }
