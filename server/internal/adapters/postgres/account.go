@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
 	app "github.com/lordvidex/gomoney/server/internal/application"
@@ -14,10 +16,10 @@ import (
 
 type accountRepo struct {
 	*sqlgen.Queries
-	c *pgx.Conn
+	c *pgxpool.Pool
 }
 
-func NewAccount(conn *pgx.Conn) app.AccountRepository {
+func NewAccount(conn *pgxpool.Pool) app.AccountRepository {
 	return &accountRepo{
 		Queries: sqlgen.New(conn),
 		c:       conn,

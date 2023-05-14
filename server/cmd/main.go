@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/lordvidex/gomoney/server/internal/adapters"
 	"log"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
+
+	"github.com/lordvidex/gomoney/server/internal/adapters"
 
 	"github.com/lordvidex/gomoney/pkg/config"
 	mygrpc "github.com/lordvidex/gomoney/pkg/grpc"
@@ -36,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close(appCtx)
+	defer conn.Close()
 
 	// driven adapters
 	uRepo := postgres.NewUser(conn)

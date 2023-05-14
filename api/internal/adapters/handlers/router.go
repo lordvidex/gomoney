@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"github.com/lordvidex/gomoney/api"
-	"github.com/lordvidex/gomoney/api/docs"
 	"log"
 	"path"
 	"strings"
+
+	"github.com/lordvidex/gomoney/api"
+	"github.com/lordvidex/gomoney/api/docs"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -66,7 +67,11 @@ func (r *Router) setupSwagger(c *config.Config) {
 
 	docs.SwaggerInfo.BasePath = c.Get("SWAGGER_BASE_PATH")
 	if docs.SwaggerInfo.BasePath == "" {
-		docs.SwaggerInfo.BasePath = "/gomoney/api"
+		docs.SwaggerInfo.BasePath = "/api"
+		hasMntSuffix := strings.HasSuffix(strings.TrimRight(docs.SwaggerInfo.Host, "/"), mountPrefix)
+		if isProd(c) &&  !hasMntSuffix {
+			docs.SwaggerInfo.BasePath = mountPrefix + docs.SwaggerInfo.BasePath
+		}
 	}
 
 	r.f.Get("/docs/*", func(ctx *fiber.Ctx) error {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	g "github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
 	app "github.com/lordvidex/gomoney/server/internal/application"
@@ -15,7 +16,7 @@ type userRepo struct {
 	*sqlgen.Queries
 }
 
-func NewUser(conn *pgx.Conn) app.UserRepository {
+func NewUser(conn *pgxpool.Pool) app.UserRepository {
 	return &userRepo{
 		Queries: sqlgen.New(conn),
 	}

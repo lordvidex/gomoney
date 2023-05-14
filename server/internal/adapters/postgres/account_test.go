@@ -11,7 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/lordvidex/gomoney/pkg/config"
 	"github.com/lordvidex/gomoney/pkg/gomoney"
 	"github.com/lordvidex/gomoney/server/internal/adapters/postgres/sqlgen"
@@ -20,7 +20,7 @@ import (
 
 // _conn must not be directly accessed but should be called through
 // getDBConnection() to ensure that the connection is initialised.
-var _conn *pgx.Conn
+var _conn *pgxpool.Pool
 var _config *config.Config
 
 func testConfig() *config.Config {
@@ -37,7 +37,7 @@ func testConfig() *config.Config {
 	return _config
 }
 
-func getDBConnection() *pgx.Conn {
+func getDBConnection() *pgxpool.Pool {
 	if _conn == nil {
 		con, err := NewConn(context.TODO(), testConfig())
 		if err != nil {

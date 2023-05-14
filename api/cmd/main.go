@@ -22,10 +22,10 @@ import (
 //	@contact.email	evans.dev99@gmail.com
 //	@contact.name	Evans Owamoyo
 
-//	@securityDefinitions.apikey	bearerAuth
-//	@in							header
-//	@name						Authorization
-//	@description				Bearer <token>
+// @securityDefinitions.apikey	bearerAuth
+// @in							header
+// @name						Authorization
+// @description				Bearer <token>
 func main() {
 	// read configs
 	c := config.New()
